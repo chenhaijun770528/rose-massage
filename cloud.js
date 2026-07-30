@@ -1,70 +1,85 @@
 // 玫瑰按摩 - 云端同步库（GitHub Gist）
-// 默认留空，可在下方填写，也可在"云端设置"页运行时配置。
-var CLOUD_DEFAULT_GIST_ID = '';   // 例如: 'ed0e2614049e613d382f94458d9022f1'
-var CLOUD_DEFAULT_TOKEN = '';     // 仅 gist 权限的 Token
+// 读取：公开 Gist（raw 通道），任何手机零配置即可查看技师
+// 写入：需 Token，在"个人中心→云端设置"里填一次（仅你自己的设备需要）
+var CLOUD_GIST_OWNER = 'chenhaijun770528';
+var CLOUD_DEFAULT_GIST_ID = '7f4dc05ed473a5148763b6b4d23e2c26';
+var CLOUD_DEFAULT_TOKEN = '';
 
 var Cloud = {
   gistId: '',
   token: '',
+  lastStatus: '', // 'ok' | 'offline' | ''
   init: function () {
     this.gistId = Storage.get('cloud_gist', '') || CLOUD_DEFAULT_GIST_ID;
     this.token = Storage.get('cloud_token', '') || CLOUD_DEFAULT_TOKEN;
   },
-  enabled: function () {
-    return !!(this.gistId && this.token);
-  },
-  // 读取整个 Gist（返回 {文件名: 解析后的内容}）
-  readAll: function (callback) {
-    if (!this.gistId) { callback(null); return; }
-    fetch('https://api.github.com/gists/' + this.gistId)
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        var files = {};
-        if (data && data.files) {
-          for (var k in data.files) {
-            try { files[k] = JSON.parse(data.files[k].content); }
-            catch (e) { files[k] = data.files[k].content; }
-          }
-        }
-        callback(files);
+  canWrite: function () { return !!(this.gistId && this.token); },
+  canRead: function () { return !!this.gistId; },
+
+  // 带超时，失败自动降级，绝不卡界面
+  _fetch: function (url, opts, asText, timeoutMs, cb) {
+    var done = false, self = this;
+    var timer = setTimeout(function () {
+      if (!done) { done = true; self.lastStatus = 'offline'; cb(null); }
+    }, timeoutMs || 6000);
+    fetch(url, opts)
+      .then(function (r) { return asText ? r.text() : r.json(); })
+      .then(function (d) {
+        if (!done) { done = true; clearTimeout(timer); self.lastStatus = 'ok'; cb(d); }
       })
-      .catch(function (e) { callback(null); });
+      .catch(function () {
+        if (!done) { done = true; clearTimeout(timer); self.lastStatus = 'offline'; cb(null); }
+      });
   },
-  // 写入单个文件（覆盖式）
-  writeFile: function (filename, content, callback) {
-    if (!this.enabled()) { if (callback) callback(false); return; }
-    var files = {};
-    files[filename] = { content: JSON.stringify(content) };
-    fetch('https://api.github.com/gists/' + this.gistId, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': 'token ' + this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ files: files })
-    })
-      .then(function (r) { return r.ok; })
-      .then(function (ok) { if (callback) callback(ok); })
-      .catch(function (e) { if (callback) callback(false); });
-  },
-  // 读取本地优先，云端合并（云端有则用云端）
-  load: function (key, defaultVal, callback) {
-    var local = Storage.get(key, defaultVal);
-    if (!this.enabled()) { callback(local); return; }
-    var fname = key + '.json';
-    this.readAll(function (files) {
-      if (files && files[fname] !== undefined) {
-        Storage.set(key, files[fname]);
-        callback(files[fname]);
-      } else {
-        callback(local);
-      }
+
+  // 公开读取（raw 通道，无需 token，任何手机可查看）
+  readAll: function (cb) {
+    if (!this.gistId) { cb(null); return; }
+    var self = this;
+    var names = ['accounts.json', 'technicians.json', 'notices.json'];
+    var results = {}, pending = names.length, got = false;
+    names.forEach(function (nm) {
+      var url = 'https://gist.githubusercontent.com/' + CLOUD_GIST_OWNER + '/' + self.gistId + '/raw/' + nm;
+      self._fetch(url, {}, true, 6000, function (txt) {
+        if (txt) { try { results[nm] = JSON.parse(txt); got = true; } catch (e) { results[nm] = null; } }
+        pending--;
+        if (pending === 0) cb(got ? results : null);
+      });
     });
   },
-  // 保存：写本地 + 写云端
-  save: function (key, val, callback) {
+
+  writeFile: function (filename, content, cb) {
+    if (!this.canWrite()) { if (cb) cb(false); return; }
+    var self = this, files = {}; files[filename] = { content: JSON.stringify(content) };
+    this._fetch('https://api.github.com/gists/' + this.gistId,
+      {
+        method: 'PATCH',
+        headers: { 'Authorization': 'token ' + this.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: files })
+      }, false, 8000, function (d) { if (cb) cb(!!d); });
+  },
+
+  // 读取：云端优先（公开），失败/超时降级本地；回调一定触发
+  load: function (key, defaultVal, cb) {
+    var local = Storage.get(key, defaultVal);
+    if (!this.canRead()) { cb(local); return; }
+    var self = this, fname = key + '.json';
+    this.readAll(function (files) {
+      if (files && files[fname] !== undefined && files[fname] !== null) { Storage.set(key, files[fname]); cb(files[fname]); }
+      else { cb(local); }
+    });
+  },
+
+  // 保存：本地立即生效，云端后台同步（不阻塞）
+  save: function (key, val, cb) {
     Storage.set(key, val);
-    if (!this.enabled()) { if (callback) callback(true); return; }
-    this.writeFile(key + '.json', val, function (ok) { if (callback) callback(ok); });
+    if (cb) cb(true);
+    if (!this.canWrite()) return;
+    this.writeFile(key + '.json', val, function () {});
+  },
+
+  test: function (cb) {
+    if (!this.canRead()) { cb(false); return; }
+    this.readAll(function (files) { cb(!!files); });
   }
 };
