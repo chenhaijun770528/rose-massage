@@ -215,6 +215,13 @@
       document.getElementById('loggedIn').style.display = 'block';
 
       Cloud.init();
+      Cloud.test(function (ok) {
+        var el = document.getElementById('cloudAuto');
+        if (el) {
+          el.textContent = ok ? '☁️ 云端：已连接（多设备同步开启）' : '📱 云端：离线（本机可用，联网后自动同步）';
+          el.style.color = ok ? '#2E7D32' : '#999';
+        }
+      });
       Cloud.load('technicians', [], function (list) {
         currentTech = null;
         for (var i = 0; i < list.length; i++) {
