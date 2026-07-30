@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理员后台 - 玫瑰按摩</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #f5f5f5; color: #333; min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #C2185B, #E91E63); color: #fff;
+      padding: 16px; text-align: center; font-size: 18px; font-weight: bold;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .container { padding: 16px; max-width: 700px; margin: 0 auto; }
+    .login-box { max-width: 360px; margin: 80px auto; background: #fff; padding: 30px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    .login-box input { width: 100%; padding: 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 12px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; background: linear-gradient(135deg,#C2185B,#E91E63); color: #fff; }
+    .btn:active { transform: scale(.98); }
+    .btn-pass { background: #2E7D32; }
+    .btn-reject { background: #F44336; }
+    .btn-ghost { background: #fff; color: #C2185B; border: 1.5px solid #C2185B; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab { flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: #fff; cursor: pointer; font-size: 14px; border: 1.5px solid #eee; }
+    .tab.active { background: #C2185B; color: #fff; border-color: #C2185B; }
+    .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.05); }
+    .tech-imgs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+    .tech-imgs img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+    .tech-field { font-size: 13px; margin: 4px 0; }
+    .tech-field b { color: #C2185B; }
+    .row-btns { display: flex; gap: 10px; margin-top: 10px; }
+    .row-btns .btn { margin: 0; }
+    .empty { text-align: center; color: #bbb; padding: 30px; }
+    .form-input, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 10px; font-family: inherit; }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .notice-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .notice-del { color: #F44336; font-size: 13px; cursor: pointer; white-space: nowrap; }
+    .back-link { text-align: center; margin-top: 16px; }
+    .back-link a { color: #C2185B; text-decoration: none; font-size: 14px; }
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 14px; z-index: 9999; }
+  </style>
+</head>
+<body>
+  <div class="header">🌹 管理员后台</div>
+
+  <!-- 后台登录 -->
+  <div id="loginView">
+    <div class="login-box">
+      <div style="text-align:center;font-size:15px;margin-bottom:16px;color:#666;">请输入管理员密码</div>
+      <input type="password" id="adminPwd" placeholder="管理员密码">
+      <button class="btn" onclick="adminLogin()">进入后台</button>
+      <div class="back-link"><a href="index.html">← 返回首页</a></div>
+    </div>
+  </div>
+
+  <!-- 后台主体 -->
+  <div id="adminView" style="display:none;">
+    <div class="container">
+      <div class="tabs">
+        <div class="tab active" id="tabReview" onclick="switchTab('review')">技师审核 <span id="pendingCount"></span></div>
+        <div class="tab" id="tabNotice" onclick="switchTab('notice')">公告管理</div>
+      </div>
+
+      <div id="reviewPanel">
+        <div id="pendingList"></div>
+      </div>
+
+      <div id="noticePanel" style="display:none;">
+        <div class="card">
+          <input class="form-input" id="noticeTitle" placeholder="公告标题">
+          <textarea class="form-textarea" id="noticeContent" placeholder="公告内容"></textarea>
+          <button class="btn" onclick="addNotice()">发布公告</button>
+        </div>
+        <div id="noticeList"></div>
+      </div>
+
+      <div class="back-link"><a href="index.html">← 返回首页</a> ｜ <a href="javascript:adminLogout()">退出后台</a></div>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="cloud.js"></script>
+  <script>
+    var ADMIN_PWD_KEY = 'rose_admin_pwd';
+    function getAdminPwd() { return Storage.get(ADMIN_PWD_KEY, 'admin123'); }
+
+    function adminLogin() {
+      var pwd = document.getElementById('adminPwd').value;
+      if (pwd === getAdminPwd()) {
+        Storage.set('admin_logged', true);
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('adminView').style.display = 'block';
+        loadReview();
+        loadNotices();
+      } else {
+        toast('密码错误');
+      }
+    }
+    function adminLogout() { Storage.set('admin_logged', false); location.reload(); }
+
+    function switchTab(t) {
+      document.getElementById('tabReview').className = 'tab' + (t === 'review' ? ' active' : '');
+      document.getElementById('tabNotice').className = 'tab' + (t === 'notice' ? ' active' : '');
+      document.getElementById('reviewPanel').style.display = t === 'review' ? 'block' : 'none';
+      document.getElementById('noticePanel').style.display = t === 'notice' ? 'block' : 'none';
+    }
+
+    function loadReview() {
+      Cloud.init();
+      Cloud.load('technicians', [], function (list) {
+        var pending = list.filter(function (t) { return t.status === '待审核'; });
+        document.getElementById('pendingCount').textContent = pending.length ? '(' + pending.length + ')' : '';
+        var box = document.getElementById('pendingList');
+        if (pending.length === 0) { box.innerHTML = '<div class="empty">暂无待审核技师</div>'; return; }
+        box.innerHTML = pending.map(function (t) {
+          var imgs = (t.photos || []).map(function (p) { return '<img src="' + p + '">'; }).join('');
+          return '<div class="card">' +
+            '<div class="tech-imgs">' + (imgs || '<div style="color:#bbb">无照片</div>') + '</div>' +
+            '<div class="tech-field"><b>姓名：</b>' + escapeHtml(t.name) + '</div>' +
+            '<div class="tech-field"><b>电话：</b>' + escapeHtml(t.phone) + '</div>' +
+            '<div class="tech-field"><b>地址：</b>' + escapeHtml(t.address) + '</div>' +
+            '<div class="tech-field"><b>价格：</b>¥' + escapeHtml(t.price) + ' / 次</div>' +
+            '<div class="tech-field"><b>项目：</b>' + escapeHtml(t.services) + '</div>' +
+            '<div class="row-btns">' +
+              '<button class="btn btn-pass" onclick="approve(\'' + t.id + '\')">通过</button>' +
+              '<button class="btn btn-reject" onclick="reject(\'' + t.id + '\')">拒绝</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      });
+    }
+
+    function approve(id) {
+      Cloud.load('technicians', [], function (list) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].id === id) { list[i].status = '已通过'; list[i].auditTime = Date.now(); break; }
+        }
+        Cloud.save('technicians', list, function () { toast('已通过'); loadReview(); });
+      });
+    }
+    function reject(id) {
+      Cloud.load('technicians', [], function (list) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].id === id) { list[i].status = '已拒绝'; break; }
+        }
+        Cloud.save('technicians', list, function () { toast('已拒绝'); loadReview(); });
+      });
+    }
+
+    function addNotice() {
+      var title = document.getElementById('noticeTitle').value.trim();
+      var content = document.getElementById('noticeContent').value.trim();
+      if (!title || !content) { toast('请填写标题和内容'); return; }
+      Cloud.load('notices', [], function (list) {
+        list.unshift({ id: genId(), title: title, content: content, time: Date.now() });
+        Cloud.save('notices', list, function () {
+          document.getElementById('noticeTitle').value = '';
+          document.getElementById('noticeContent').value = '';
+          toast('公告已发布');
+          loadNotices();
+        });
+      });
+    }
+
+    function loadNotices() {
+      Cloud.load('notices', [], function (list) {
+        var box = document.getElementById('noticeList');
+        if (list.length === 0) { box.innerHTML = '<div class="empty">暂无公告</div>'; return; }
+        box.innerHTML = list.map(function (n) {
+          return '<div class="card notice-item">' +
+            '<div><b>' + escapeHtml(n.title) + '</b><div style="font-size:12px;color:#888;margin-top:4px;white-space:pre-wrap;">' + escapeHtml(n.content) + '</div><div style="font-size:11px;color:#bbb;margin-top:6px;">' + formatTime(n.time) + '</div></div>' +
+            '<div class="notice-del" onclick="delNotice(\'' + n.id + '\')">删除</div>' +
+          '</div>';
+        }).join('');
+      });
+    }
+
+    function delNotice(id) {
+      Cloud.load('notices', [], function (list) {
+        var nl = list.filter(function (n) { return n.id !== id; });
+        Cloud.save('notices', nl, function () { loadNotices(); });
+      });
+    }
+
+    if (Storage.get('admin_logged', false)) {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('adminView').style.display = 'block';
+      Cloud.init(); loadReview(); loadNotices();
+    }
+  </script>
+</body>
+</html>
