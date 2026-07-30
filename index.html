@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>玫瑰按摩</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #FFF5F7;
+      color: #333;
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    .header {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: linear-gradient(135deg, #C2185B, #E91E63);
+      color: #fff; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 100; box-shadow: 0 2px 10px rgba(194,24,91,.25);
+    }
+    .header .title { font-size: 19px; font-weight: bold; }
+    .header .me {
+      font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,.2); padding: 5px 12px; border-radius: 20px;
+    }
+    .container { padding: 64px 14px 20px; max-width: 750px; margin: 0 auto; }
+    .section { margin-bottom: 22px; }
+    .section-title {
+      font-size: 16px; font-weight: bold; color: #C2185B;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .section-title::before {
+      content: ''; width: 4px; height: 16px; background: #C2185B; border-radius: 2px;
+    }
+    .notice {
+      background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05); border-left: 3px solid #E91E63;
+    }
+    .notice .n-title { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+    .notice .n-content { font-size: 13px; color: #666; line-height: 1.5; white-space: pre-wrap; }
+    .notice .n-time { font-size: 11px; color: #999; margin-top: 6px; }
+    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tech-card {
+      background: #fff; border-radius: 14px; overflow: hidden; cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: transform .15s;
+    }
+    .tech-card:active { transform: scale(.97); }
+    .tech-photo { width: 100%; height: 130px; object-fit: cover; background: #f3e4e9; display: block; }
+    .tech-photo-placeholder {
+      width: 100%; height: 130px; display: flex; align-items: center; justify-content: center;
+      font-size: 44px; background: linear-gradient(135deg,#fce4ec,#f8bbd0);
+    }
+    .tech-info { padding: 10px 12px; }
+    .tech-name { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+    .badge-new {
+      background: #E91E63; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: normal;
+    }
+    .tech-price { color: #C2185B; font-weight: bold; font-size: 14px; margin: 4px 0; }
+    .tech-services { font-size: 12px; color: #888; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .empty { text-align: center; color: #bbb; padding: 30px; font-size: 14px; }
+    .footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #eee; padding: 10px 16px;
+      text-align: center; font-size: 13px; color: #C2185B; z-index: 100;
+    }
+    .footer a { color: #C2185B; text-decoration: none; font-weight: bold; }
+    .toast {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px;
+      font-size: 14px; z-index: 9999;
+    }
+    .admin-entry {
+      position: fixed; right: 14px; bottom: 76px; background: #C2185B; color: #fff;
+      width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; box-shadow: 0 3px 12px rgba(194,24,91,.4); cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">🌹 玫瑰按摩</div>
+    <div class="me" onclick="goPage('profile.html')">👤 我的</div>
+  </div>
+
+  <div class="container">
+    <!-- 公告展示区 -->
+    <div class="section">
+      <div class="section-title">📢 公告</div>
+      <div id="noticeList"></div>
+    </div>
+
+    <!-- 新人上线 -->
+    <div class="section" id="newSection" style="display:none;">
+      <div class="section-title">✨ 新人上线</div>
+      <div class="tech-grid" id="newList"></div>
+    </div>
+
+    <!-- 技师展示区 -->
+    <div class="section">
+      <div class="section-title">💆 技师展示</div>
+      <div class="tech-grid" id="techList"></div>
+    </div>
+  </div>
+
+  <div class="admin-entry" onclick="goPage('admin.html')" title="管理员后台">⚙️</div>
+
+  <div class="footer">
+    开发者联系电话：<a href="tel:13913627704">13913627704</a>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="cloud.js"></script>
+  <script>
+    function goPage(p) { location.href = p; }
+
+    function renderTechnicianCard(t, isNew) {
+      var photoHtml = t.photos && t.photos.length > 0
+        ? '<img class="tech-photo" src="' + t.photos[0] + '" alt="">'
+        : '<div class="tech-photo-placeholder">💆</div>';
+      var newBadge = isNew ? '<span class="badge-new">新人</span>' : '';
+      return '<div class="tech-card" onclick="goDetail(\'' + t.id + '\')">' +
+        photoHtml +
+        '<div class="tech-info">' +
+          '<div class="tech-name">' + escapeHtml(t.name) + newBadge + '</div>' +
+          '<div class="tech-price">¥' + escapeHtml(t.price) + ' / 次</div>' +
+          '<div class="tech-services">' + escapeHtml(t.services) + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function goDetail(id) { location.href = 'technician-detail.html?id=' + id; }
+
+    function render(data) {
+      var technicians = (data.technicians || []).filter(function (t) {
+        return t.status === '已通过';
+      });
+      var notices = data.notices || [];
+
+      // 公告
+      var nl = document.getElementById('noticeList');
+      if (notices.length === 0) {
+        nl.innerHTML = '<div class="empty">暂无公告</div>';
+      } else {
+        nl.innerHTML = notices.map(function (n) {
+          return '<div class="notice">' +
+            '<div class="n-title">' + escapeHtml(n.title) + '</div>' +
+            '<div class="n-content">' + escapeHtml(n.content) + '</div>' +
+            '<div class="n-time">' + formatTime(n.time) + '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      // 技师（按审核时间倒序）
+      technicians.sort(function (a, b) { return (b.auditTime || 0) - (a.auditTime || 0); });
+      var now = Date.now();
+      var newTechs = technicians.filter(function (t) {
+        return t.auditTime && (now - t.auditTime) < 7 * 24 * 3600 * 1000;
+      }).slice(0, 4);
+
+      var ns = document.getElementById('newSection');
+      if (newTechs.length > 0) {
+        ns.style.display = 'block';
+        document.getElementById('newList').innerHTML = newTechs.map(function (t) {
+          return renderTechnicianCard(t, true);
+        }).join('');
+      } else {
+        ns.style.display = 'none';
+      }
+
+      var tl = document.getElementById('techList');
+      if (technicians.length === 0) {
+        tl.innerHTML = '<div class="empty">暂无技师，敬请期待</div>';
+      } else {
+        tl.innerHTML = technicians.map(function (t) {
+          return renderTechnicianCard(t, false);
+        }).join('');
+      }
+    }
+
+    function init() {
+      Cloud.init();
+      var data = { technicians: [], notices: [] };
+      var pending = 2;
+      Cloud.load('technicians', [], function (v) { data.technicians = v; if (--pending === 0) render(data); });
+      Cloud.load('notices', [], function (v) { data.notices = v; if (--pending === 0) render(data); });
+    }
+    init();
+  </script>
+</body>
+</html>
