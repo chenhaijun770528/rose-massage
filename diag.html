@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>诊断</title>
+<style>
+  body { font-family: sans-serif; padding: 16px; background: #f5f5f5; }
+  .card { background: #fff; border-radius: 8px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .ok { color: #2E7D32; }
+  .fail { color: #c62828; }
+  .warn { color: #e65100; }
+  .btn { display: inline-block; background: #2E7D32; color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; margin: 4px; }
+  .btn.blue { background: #1565C0; }
+  pre { background: #f0f0f0; padding: 10px; border-radius: 4px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  .status { font-size: 18px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="status" id="s1">⏳ 初始化中…</div>
+  <button class="btn" onclick="location.reload()">🔄 刷新页面</button>
+  <button class="btn blue" onclick="clearAll()">🗑 清空所有数据</button>
+</div>
+
+<div class="card">
+  <h3>📶 网络检测</h3>
+  <div id="net1">-</div>
+  <div id="net2">-</div>
+  <div id="net3">-</div>
+  <div id="net4">-</div>
+</div>
+
+<div class="card">
+  <h3>💾 localStorage 数据</h3>
+  <div id="ls">-</div>
+</div>
+
+<div class="card">
+  <h3>📋 页面信息</h3>
+  <div id="info">-</div>
+</div>
+
+<div class="card">
+  <h3>🔧 修复操作</h3>
+  <button class="btn" onclick="fixInit()">① 修复初始化（推荐先点这个）</button>
+  <button class="btn blue" onclick="testAll()">② 完整诊断</button>
+</div>
+
+<div class="card" id="resultCard" style="display:none">
+  <h3 id="resTitle">结果</h3>
+  <pre id="resBody">-</pre>
+</div>
+
+<script src="common.js"></script>
+<script src="cloud.js"></script>
+<script>
+// 立即显示页面结构，不等任何网络
+document.getElementById('s1').textContent = '✅ 页面骨架加载成功（JS未崩溃）';
+document.getElementById('s1').className = 'status ok';
+document.getElementById('info').innerHTML =
+  '<b>User-Agent:</b> ' + navigator.userAgent.slice(0, 80) + '<br>' +
+  '<b>online:</b> ' + navigator.onLine + '<br>' +
+  '<b>屏幕:</b> ' + screen.width + 'x' + screen.height + '<br>' +
+  '<b>touch:</b> ' + ('ontouchstart' in window);
+
+// 显示 localStorage
+function showLS() {
+  var keys = ['rose_accounts','rose_technicians','rose_notices','cloud_gist','cloud_token'];
+  var html = '';
+  keys.forEach(function(k){
+    var v = localStorage.getItem(k);
+    html += '<b>' + k + ':</b> ' + (v ? (v.length > 60 ? v.slice(0,60)+'…' : v) : '<span class="fail">(空)</span>') + '<br>';
+  });
+  document.getElementById('ls').innerHTML = html || '<span class="warn">无数据</span>';
+}
+showLS();
+
+// 网络检测
+function testNet(url, label, el) {
+  var t0 = Date.now();
+  fetch(url, { method: 'HEAD', cache: 'no-store' })
+    .then(function(){ el.textContent = '✅ ' + label + ' 可达 (' + (Date.now()-t0) + 'ms)'; el.className = 'ok'; })
+    .catch(function(e){ el.textContent = '❌ ' + label + ' 不通: ' + e.message; el.className = 'fail'; });
+}
+testNet('https://www.baidu.com/', '百度', document.getElementById('net1'));
+testNet('https://gist.githubusercontent.com/chenhaijun770528/7f4dc05ed473a5148763b6b4d23e2c26/raw/accounts.json', 'GitHub Gist raw', document.getElementById('net2'));
+testNet('https://api.github.com/gists/7f4dc05ed473a5148763b6b4d23e2c26', 'GitHub Gist API', document.getElementById('net3'));
+testNet('https://raw.githubusercontent.com/chenhaijun770528/rose-massage/main/cloud.js', 'GitHub Pages', document.getElementById('net4'));
+
+// 修复初始化：确保 common.js 和 cloud.js 正确初始化
+function fixInit() {
+  try {
+    if (typeof initCommon === 'function') initCommon();
+    Cloud.init();
+    showLS();
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resTitle').textContent = '✅ 初始化修复成功';
+    document.getElementById('resBody').textContent = '请返回首页重新尝试注册/登录。如果仍有问题，点击"完整诊断"查看详细日志。';
+    document.getElementById('resBody').className = '';
+  } catch(e) {
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resTitle').textContent = '❌ 修复失败';
+    document.getElementById('resBody').textContent = e.message + '\n' + (e.stack||'').slice(0,500);
+  }
+}
+
+// 完整诊断
+function testAll() {
+  var log = [];
+  log.push('=== 完整诊断 ' + new Date().toLocaleString() + ' ===');
+  log.push('navigator.onLine: ' + navigator.onLine);
+  log.push('userAgent: ' + navigator.userAgent);
+  log.push('localStorage 键数: ' + localStorage.length);
+
+  // 测试 Cloud.load
+  log.push('\n--- Cloud.load 测试 ---');
+  var t0 = Date.now();
+  Cloud.load('technicians', [], function(data) {
+    log.push('Cloud.load 回调耗时: ' + (Date.now()-t0) + 'ms');
+    log.push('返回数据: ' + JSON.stringify(data).slice(0,100));
+    log.push('Cloud.lastStatus: ' + Cloud.lastStatus);
+    log.push('Cloud.canRead: ' + Cloud.canRead());
+    log.push('Cloud.canWrite: ' + Cloud.canWrite());
+
+    // 测试 Storage
+    log.push('\n--- Storage 测试 ---');
+    try {
+      Storage.set('test_key', 'test_value');
+      var tv = Storage.get('test_key');
+      log.push('Storage 读写: ' + (tv === 'test_value' ? '✅ 正常' : '❌ 异常(' + tv + ')'));
+    } catch(e) { log.push('Storage 异常: ' + e.message); }
+
+    // 测试 fetch
+    log.push('\n--- fetch 测试 ---');
+    fetch('https://www.baidu.com/', { method: 'HEAD' })
+      .then(function(){ log.push('百度 fetch: ✅ 成功'; })
+      .catch(function(e){ log.push('百度 fetch: ❌ ' + e.message); });
+
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resTitle').textContent = '📋 完整诊断报告';
+    document.getElementById('resBody').textContent = log.join('\n');
+  });
+}
+
+function clearAll() {
+  if (!confirm('确定清空所有本地数据？（包括账号、技师资料等）')) return;
+  ['rose_accounts','rose_technicians','rose_notices','cloud_gist','cloud_token'].forEach(function(k){
+    localStorage.removeItem(k);
+  });
+  showLS();
+  alert('已清空，请刷新页面重新开始');
+}
+</script>
+</body>
+</html>
