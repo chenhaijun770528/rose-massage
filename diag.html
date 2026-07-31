@@ -55,57 +55,52 @@
 <script src="common.js"></script>
 <script src="cloud.js"></script>
 <script>
-// 立即显示页面结构，不等任何网络
+// 先把页面骨架标记为加载成功，不等任何网络
 document.getElementById('s1').textContent = '✅ 页面骨架加载成功（JS未崩溃）';
 document.getElementById('s1').className = 'status ok';
+
 document.getElementById('info').innerHTML =
   '<b>User-Agent:</b> ' + navigator.userAgent.slice(0, 80) + '<br>' +
   '<b>online:</b> ' + navigator.onLine + '<br>' +
   '<b>屏幕:</b> ' + screen.width + 'x' + screen.height + '<br>' +
   '<b>touch:</b> ' + ('ontouchstart' in window);
 
-// 显示 localStorage
 function showLS() {
-  var keys = ['rose_accounts','rose_technicians','rose_notices','cloud_gist','cloud_token'];
+  var keys = ['rose_accounts', 'rose_technicians', 'rose_notices', 'cloud_gist', 'cloud_token'];
   var html = '';
-  keys.forEach(function(k){
+  keys.forEach(function (k) {
     var v = localStorage.getItem(k);
-    html += '<b>' + k + ':</b> ' + (v ? (v.length > 60 ? v.slice(0,60)+'…' : v) : '<span class="fail">(空)</span>') + '<br>';
+    html += '<b>' + k + ':</b> ' + (v ? (v.length > 60 ? v.slice(0, 60) + '…' : v) : '<span class="fail">(空)</span>') + '<br>';
   });
   document.getElementById('ls').innerHTML = html || '<span class="warn">无数据</span>';
 }
 showLS();
 
-// 网络检测
 function testNet(url, label, el) {
   var t0 = Date.now();
   fetch(url, { method: 'HEAD', cache: 'no-store' })
-    .then(function(){ el.textContent = '✅ ' + label + ' 可达 (' + (Date.now()-t0) + 'ms)'; el.className = 'ok'; })
-    .catch(function(e){ el.textContent = '❌ ' + label + ' 不通: ' + e.message; el.className = 'fail'; });
+    .then(function () { el.textContent = '✅ ' + label + ' 可达 (' + (Date.now() - t0) + 'ms)'; el.className = 'ok'; })
+    .catch(function (e) { el.textContent = '❌ ' + label + ' 不通: ' + e.message; el.className = 'fail'; });
 }
 testNet('https://www.baidu.com/', '百度', document.getElementById('net1'));
 testNet('https://gist.githubusercontent.com/chenhaijun770528/7f4dc05ed473a5148763b6b4d23e2c26/raw/accounts.json', 'GitHub Gist raw', document.getElementById('net2'));
 testNet('https://api.github.com/gists/7f4dc05ed473a5148763b6b4d23e2c26', 'GitHub Gist API', document.getElementById('net3'));
 testNet('https://raw.githubusercontent.com/chenhaijun770528/rose-massage/main/cloud.js', 'GitHub Pages', document.getElementById('net4'));
 
-// 修复初始化：确保 common.js 和 cloud.js 正确初始化
 function fixInit() {
   try {
-    if (typeof initCommon === 'function') initCommon();
     Cloud.init();
     showLS();
     document.getElementById('resultCard').style.display = 'block';
     document.getElementById('resTitle').textContent = '✅ 初始化修复成功';
     document.getElementById('resBody').textContent = '请返回首页重新尝试注册/登录。如果仍有问题，点击"完整诊断"查看详细日志。';
-    document.getElementById('resBody').className = '';
-  } catch(e) {
+  } catch (e) {
     document.getElementById('resultCard').style.display = 'block';
     document.getElementById('resTitle').textContent = '❌ 修复失败';
-    document.getElementById('resBody').textContent = e.message + '\n' + (e.stack||'').slice(0,500);
+    document.getElementById('resBody').textContent = e.message + '\n' + ((e.stack || '').slice(0, 500));
   }
 }
 
-// 完整诊断
 function testAll() {
   var log = [];
   log.push('=== 完整诊断 ' + new Date().toLocaleString() + ' ===');
@@ -113,41 +108,43 @@ function testAll() {
   log.push('userAgent: ' + navigator.userAgent);
   log.push('localStorage 键数: ' + localStorage.length);
 
-  // 测试 Cloud.load
   log.push('\n--- Cloud.load 测试 ---');
   var t0 = Date.now();
-  Cloud.load('technicians', [], function(data) {
-    log.push('Cloud.load 回调耗时: ' + (Date.now()-t0) + 'ms');
-    log.push('返回数据: ' + JSON.stringify(data).slice(0,100));
+  Cloud.load('technicians', [], function (data) {
+    log.push('Cloud.load 回调耗时: ' + (Date.now() - t0) + 'ms');
+    log.push('返回数据条数: ' + (Array.isArray(data) ? data.length : 0));
     log.push('Cloud.lastStatus: ' + Cloud.lastStatus);
     log.push('Cloud.canRead: ' + Cloud.canRead());
     log.push('Cloud.canWrite: ' + Cloud.canWrite());
 
-    // 测试 Storage
     log.push('\n--- Storage 测试 ---');
     try {
       Storage.set('test_key', 'test_value');
       var tv = Storage.get('test_key');
       log.push('Storage 读写: ' + (tv === 'test_value' ? '✅ 正常' : '❌ 异常(' + tv + ')'));
-    } catch(e) { log.push('Storage 异常: ' + e.message); }
+    } catch (e) {
+      log.push('Storage 异常: ' + e.message);
+    }
 
-    // 测试 fetch
-    log.push('\n--- fetch 测试 ---');
+    log.push('\n--- fetch 百度测试 ---');
+    var t1 = Date.now();
     fetch('https://www.baidu.com/', { method: 'HEAD' })
-      .then(function(){ log.push('百度 fetch: ✅ 成功'; })
-      .catch(function(e){ log.push('百度 fetch: ❌ ' + e.message); });
+      .then(function () { log.push('百度 fetch: ✅ 成功 (' + (Date.now() - t1) + 'ms)'); show(); })
+      .catch(function (e) { log.push('百度 fetch: ❌ ' + e.message); show(); });
 
-    document.getElementById('resultCard').style.display = 'block';
-    document.getElementById('resTitle').textContent = '📋 完整诊断报告';
-    document.getElementById('resBody').textContent = log.join('\n');
+    function show() {
+      document.getElementById('resultCard').style.display = 'block';
+      document.getElementById('resTitle').textContent = '📋 完整诊断报告';
+      document.getElementById('resBody').textContent = log.join('\n');
+    }
+    show();
   });
 }
 
 function clearAll() {
   if (!confirm('确定清空所有本地数据？（包括账号、技师资料等）')) return;
-  ['rose_accounts','rose_technicians','rose_notices','cloud_gist','cloud_token'].forEach(function(k){
-    localStorage.removeItem(k);
-  });
+  var keys = ['rose_accounts', 'rose_technicians', 'rose_notices', 'cloud_gist', 'cloud_token'];
+  keys.forEach(function (k) { localStorage.removeItem(k); });
   showLS();
   alert('已清空，请刷新页面重新开始');
 }
