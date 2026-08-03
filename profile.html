@@ -175,31 +175,49 @@
       var address = document.getElementById('address').value.trim();
       var price = document.getElementById('price').value.trim();
       var services = document.getElementById('services').value.trim();
-
       if (!name || !phone || !address || !price || !services) { toast('请填写所有必填项'); return; }
       if (photos.length === 0) { toast('请至少上传一张照片'); return; }
 
+      var btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = '提交中...';
+
+      // 先查本地缓存是否有已提交记录（用于保留原有id和submitTime）
+      var cachedId = null, cachedSubmitTime = null;
+      var localTech = JSON.parse(Storage.get('rose_technicians') || '[]');
+      for (var ci = 0; ci < localTech.length; ci++) {
+        if (localTech[ci].accountId === user.id) { cachedId = localTech[ci].id; cachedSubmitTime = localTech[ci].submitTime; break; }
+      }
+
+      var newEntry = {
+        id: cachedId || genId(),
+        accountId: user.id, account: user.account,
+        name: name, phone: phone, address: address, price: price,
+        services: services, photos: photos,
+        status: '待审核',
+        submitTime: cachedSubmitTime || Date.now(),
+        updateTime: Date.now()
+      };
+
+      // 立即写本地
+      var replaced = false;
+      for (var li = 0; li < localTech.length; li++) {
+        if (localTech[li].accountId === user.id) { localTech[li] = newEntry; replaced = true; break; }
+      }
+      if (!replaced) localTech.unshift(newEntry);
+      Storage.set('rose_technicians', JSON.stringify(localTech));
+
+      // 云端同步
       Cloud.init();
       Cloud.load('technicians', [], function (list) {
-        var existing = null;
-        for (var i = 0; i < list.length; i++) {
-          if (list[i].accountId === user.id) { existing = list[i]; break; }
+        var cloudIdx = -1;
+        for (var ki = 0; ki < list.length; ki++) {
+          if (list[ki].accountId === user.id) { cloudIdx = ki; break; }
         }
-        if (existing) {
-          // 修改：保持原状态（已通过则直接渲染）
-          existing.name = name; existing.phone = phone; existing.address = address;
-          existing.price = price; existing.services = services; existing.photos = photos;
-          existing.updateTime = Date.now();
-        } else {
-          list.unshift({
-            id: genId(), accountId: user.id, account: user.account,
-            name: name, phone: phone, address: address, price: price,
-            services: services, photos: photos, status: '待审核', submitTime: Date.now()
-          });
-        }
+        if (cloudIdx >= 0) { list[cloudIdx] = newEntry; } else { list.unshift(newEntry); }
         Cloud.save('technicians', list, function () {
-          toast(existing ? '资料已更新' : '已提交，等待审核');
-          setTimeout(loadPage, 1000);
+          toast(replaced ? '资料已更新' : '已提交，等待审核');
+          btn.disabled = false; btn.textContent = replaced ? '保存修改' : '修改资料';
+          loadPage();
         });
       });
     }
