@@ -6,54 +6,36 @@
   <title>个人中心 - 玫瑰按摩</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: #FFF5F7; color: #333; min-height: 100vh; padding-bottom: 40px;
-    }
-    .header {
-      background: linear-gradient(135deg, #C2185B, #E91E63); color: #fff;
-      padding: 16px; text-align: center; font-size: 18px; font-weight: bold;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #FFF5F7; color: #333; min-height: 100vh; padding-bottom: 40px; }
+    .header { background: linear-gradient(135deg, #C2185B, #E91E63); color: #fff; padding: 16px; text-align: center; font-size: 18px; font-weight: bold; }
     .container { padding: 16px; max-width: 600px; margin: 0 auto; }
     .card { background: #fff; border-radius: 14px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
     .form-group { margin-bottom: 14px; }
     .form-label { font-size: 13px; color: #666; margin-bottom: 6px; display: block; font-weight: 500; }
-    .form-input, .form-textarea {
-      width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px;
-      font-size: 15px; outline: none; transition: border-color .2s; font-family: inherit;
-    }
+    .form-input, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; outline: none; font-family: inherit; }
     .form-input:focus, .form-textarea:focus { border-color: #C2185B; }
     .form-textarea { resize: vertical; min-height: 70px; }
-    .btn {
-      width: 100%; padding: 13px; background: linear-gradient(135deg, #C2185B, #E91E63);
-      color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold;
-      cursor: pointer; margin-top: 6px;
-    }
+    .btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #C2185B, #E91E63); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
     .btn-ghost { background: #fff; color: #C2185B; border: 1.5px solid #C2185B; }
-    .status-tip { font-size: 13px; padding: 10px 12px; border-radius: 10px; margin-bottom: 14px; }
-    .tip-wait { background: #FFF3E0; color: #E65100; }
-    .tip-ok { background: #E8F5E9; color: #2E7D32; }
+    .status-tip { font-size: 14px; padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; line-height: 1.5; }
+    .tip-wait { background: #FFF3E0; color: #E65100; border-left: 4px solid #FF9800; }
+    .tip-ok { background: #E8F5E9; color: #2E7D32; border-left: 4px solid #2E7D32; }
+    .tip-reject { background: #FFEBEE; color: #C62828; border-left: 4px solid #F44336; }
+    .tip-new { background: #FFF8E1; color: #795548; border-left: 4px solid #795548; }
     .photos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
     .photo-item { position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; background: #f3e4e9; }
     .photo-item img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-del { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,.6); color: #fff;
-      width: 20px; height: 20px; border-radius: 50%; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; }
-    .photo-add { width: 80px; height: 80px; border: 1.5px dashed #C2185B; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; font-size: 28px; color: #C2185B; cursor: pointer; }
-    .link-row { display: flex; gap: 10px; }
-    .link-row .btn { margin-top: 0; }
+    .photo-del { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,.6); color: #fff; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; }
+    .photo-add { width: 80px; height: 80px; border: 1.5px dashed #C2185B; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #C2185B; cursor: pointer; }
     .empty { text-align: center; color: #bbb; padding: 40px 20px; }
     .empty a { color: #C2185B; }
-    .toast {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px;
-      font-size: 14px; z-index: 9999;
-    }
-    .cloud-box { font-size: 13px; color: #666; }
-    .cloud-box .form-input { margin-bottom: 8px; }
-    .settings-toggle { color: #C2185B; font-size: 13px; cursor: pointer; text-decoration: underline; }
     .logout-btn { color: #999; font-size: 13px; cursor: pointer; text-align: center; margin-top: 10px; }
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 14px; z-index: 99999; }
+    .cloud-box { font-size: 13px; color: #666; }
+    .settings-toggle { color: #C2185B; font-size: 13px; cursor: pointer; text-decoration: underline; }
+    .required-hint { font-size: 11px; color: #bbb; }
   </style>
 </head>
 <body>
@@ -64,11 +46,12 @@
     </div>
 
     <div id="loggedIn" style="display:none;">
+      <!-- 状态提示 -->
       <div id="statusTip"></div>
 
       <div class="card">
         <div class="form-group">
-          <label class="form-label">技师姓名 *</label>
+          <label class="form-label">技师姓名 * <span class="required-hint">必填</span></label>
           <input class="form-input" id="name" placeholder="例如：小芳">
         </div>
         <div class="form-group">
@@ -81,7 +64,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">价格（元/次）*</label>
-          <input class="form-input" id="price" placeholder="例如：198">
+          <input class="form-input" id="price" placeholder="例如：198" type="number">
         </div>
         <div class="form-group">
           <label class="form-label">服务项目 *</label>
@@ -100,10 +83,10 @@
       <div class="card cloud-box" style="margin-top:16px;">
         <div class="settings-toggle" onclick="toggleCloud()">⚙️ 云端同步设置（多设备共享数据）</div>
         <div id="cloudPanel" style="display:none; margin-top:10px;">
-          <input class="form-input" id="gistId" placeholder="Gist ID">
-          <input class="form-input" id="gistToken" placeholder="GitHub Token（仅 gist 权限）">
-          <button class="btn btn-ghost" onclick="saveCloud()">保存并测试连接</button>
-          <div id="cloudStatus" style="margin-top:8px;"></div>
+          <input class="form-input" id="gistId" placeholder="Gist ID（可选）">
+          <input class="form-input" id="gistToken" placeholder="GitHub Token（可选，无则仅本机使用）">
+          <button class="btn btn-ghost" onclick="saveCloud()">保存并测试</button>
+          <div id="cloudStatus" style="margin-top:8px;font-size:12px;"></div>
         </div>
       </div>
 
@@ -114,8 +97,65 @@
   <script src="common.js"></script>
   <script src="cloud.js"></script>
   <script>
-    var currentTech = null;
     var photos = [];
+    var myTechId = null; // 当前用户的技师记录ID
+
+    // 页面加载时立即从本地存储读取我的审核状态
+    function initPage() {
+      var user = getCurrentUser();
+      if (!user) {
+        document.getElementById('loggedOut').style.display = 'block';
+        document.getElementById('loggedIn').style.display = 'none';
+        return;
+      }
+      document.getElementById('loggedOut').style.display = 'none';
+      document.getElementById('loggedIn').style.display = 'block';
+
+      // 从本地存储立即读取（同步，无延迟）
+      var list = Storage.get('technicians') || [];
+      var me = null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].accountId === user.id) { me = list[i]; break; }
+      }
+
+      // 渲染状态
+      var tip = document.getElementById('statusTip');
+      var btn = document.getElementById('submitBtn');
+      if (me) {
+        myTechId = me.id;
+        document.getElementById('name').value = me.name || '';
+        document.getElementById('phone').value = me.phone || '';
+        document.getElementById('address').value = me.address || '';
+        document.getElementById('price').value = me.price || '';
+        document.getElementById('services').value = me.services || '';
+        photos = me.photos ? me.photos.slice() : [];
+        renderPhotos();
+
+        if (me.status === '待审核') {
+          tip.className = 'status-tip tip-wait';
+          tip.innerHTML = '⏳ <b>审核中</b><br>您的资料已提交，等待管理员审核，请耐心等待...';
+          btn.textContent = '修改资料并重新提交';
+        } else if (me.status === '已拒绝') {
+          tip.className = 'status-tip tip-reject';
+          tip.innerHTML = '❌ <b>审核未通过</b><br>请修改下方资料后重新提交';
+          btn.textContent = '修改后重新提交';
+        } else if (me.status === '已通过') {
+          tip.className = 'status-tip tip-ok';
+          tip.innerHTML = '✅ <b>已通过审核</b><br>您的资料已展示在首页！修改后将重新审核';
+          btn.textContent = '修改资料';
+        } else {
+          tip.className = 'status-tip tip-new';
+          tip.innerHTML = '📋 请填写完整资料后提交审核';
+          btn.textContent = '提交审核';
+        }
+      } else {
+        tip.className = 'status-tip tip-new';
+        tip.innerHTML = '📋 请填写下方资料并提交审核（带 * 为必填）';
+        btn.textContent = '提交审核';
+        photos = [];
+        renderPhotos();
+      }
+    }
 
     function toggleCloud() {
       var p = document.getElementById('cloudPanel');
@@ -133,10 +173,21 @@
       Storage.set('cloud_token', tok);
       Cloud.init();
       var st = document.getElementById('cloudStatus');
-      if (!Cloud.enabled()) { st.textContent = '请填写完整的 Gist ID 和 Token'; st.style.color = '#F44336'; return; }
-      Cloud.readAll(function (files) {
-        if (files) { st.textContent = '✅ 云端连接成功'; st.style.color = '#2E7D32'; }
-        else { st.textContent = '❌ 连接失败，请检查 Gist ID 和 Token'; st.style.color = '#F44336'; }
+      if (!Cloud.enabled()) {
+        st.textContent = '未配置 Token，仅本机使用';
+        st.style.color = '#999';
+        return;
+      }
+      st.textContent = '正在测试连接...';
+      st.style.color = '#666';
+      Cloud.test(function (ok) {
+        if (ok) {
+          st.textContent = '✅ 云端连接成功，多设备可同步';
+          st.style.color = '#2E7D32';
+        } else {
+          st.textContent = '❌ 连接失败，请检查 Gist ID 和 Token';
+          st.style.color = '#F44336';
+        }
       });
     }
 
@@ -156,6 +207,7 @@
       var files = e.target.files;
       if (!files || files.length === 0) return;
       var remain = 3 - photos.length;
+      if (remain <= 0) return;
       var toProcess = Math.min(remain, files.length);
       var done = 0;
       for (var i = 0; i < toProcess; i++) {
@@ -175,109 +227,64 @@
       var address = document.getElementById('address').value.trim();
       var price = document.getElementById('price').value.trim();
       var services = document.getElementById('services').value.trim();
-      if (!name || !phone || !address || !price || !services) { toast('请填写所有必填项'); return; }
-      if (photos.length === 0) { toast('请至少上传一张照片'); return; }
+
+      if (!name) { toast('请填写姓名'); return; }
+      if (!phone) { toast('请填写电话'); return; }
+      if (!address) { toast('请填写地址'); return; }
+      if (!price) { toast('请填写价格'); return; }
+      if (!services) { toast('请填写服务项目'); return; }
+      if (photos.length === 0) { toast('请上传至少一张照片'); return; }
 
       var btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = '提交中...';
+      btn.disabled = true;
+      btn.textContent = '提交中...';
 
-      // 先查本地缓存是否有已提交记录（用于保留原有id和submitTime）
-      var cachedId = null, cachedSubmitTime = null;
-      var localTech = JSON.parse(Storage.get('rose_technicians') || '[]');
-      for (var ci = 0; ci < localTech.length; ci++) {
-        if (localTech[ci].accountId === user.id) { cachedId = localTech[ci].id; cachedSubmitTime = localTech[ci].submitTime; break; }
+      // 查本地记录（保留原有id和submitTime）
+      var list = Storage.get('technicians') || [];
+      var idx = -1;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].accountId === user.id) { idx = i; break; }
       }
 
-      var newEntry = {
-        id: cachedId || genId(),
-        accountId: user.id, account: user.account,
-        name: name, phone: phone, address: address, price: price,
-        services: services, photos: photos,
+      var entry = {
+        id: idx >= 0 ? list[idx].id : genId(),
+        accountId: user.id,
+        account: user.account,
+        name: name,
+        phone: phone,
+        address: address,
+        price: price,
+        services: services,
+        photos: photos,
         status: '待审核',
-        submitTime: cachedSubmitTime || Date.now(),
+        submitTime: idx >= 0 ? list[idx].submitTime : Date.now(),
         updateTime: Date.now()
       };
 
-      // 立即写本地
-      var replaced = false;
-      for (var li = 0; li < localTech.length; li++) {
-        if (localTech[li].accountId === user.id) { localTech[li] = newEntry; replaced = true; break; }
+      if (idx >= 0) {
+        list[idx] = entry;
+      } else {
+        list.unshift(entry);
       }
-      if (!replaced) localTech.unshift(newEntry);
-      Storage.set('rose_technicians', JSON.stringify(localTech));
 
-      // 云端同步
-      Cloud.init();
-      Cloud.load('technicians', [], function (list) {
-        var cloudIdx = -1;
-        for (var ki = 0; ki < list.length; ki++) {
-          if (list[ki].accountId === user.id) { cloudIdx = ki; break; }
-        }
-        if (cloudIdx >= 0) { list[cloudIdx] = newEntry; } else { list.unshift(newEntry); }
-        Cloud.save('technicians', list, function () {
-          toast(replaced ? '资料已更新' : '已提交，等待审核');
-          btn.disabled = false; btn.textContent = replaced ? '保存修改' : '修改资料';
-          loadPage();
-        });
-      });
+      // 立即写本地存储
+      Storage.set('technicians', list);
+      myTechId = entry.id;
+
+      // 提示用户
+      var tip = document.getElementById('statusTip');
+      tip.className = 'status-tip tip-wait';
+      tip.innerHTML = '⏳ <b>提交成功！</b><br>等待管理员审核，请耐心等待...';
+      btn.textContent = '修改资料并重新提交';
+      btn.disabled = false;
+      toast('已提交，等待审核');
+
+      // 后台尝试云端同步（有 Token 才发）
+      Cloud.save('technicians', list, function () {});
     }
 
-    function loadPage() {
-      var user = getCurrentUser();
-      if (!user) {
-        document.getElementById('loggedOut').style.display = 'block';
-        document.getElementById('loggedIn').style.display = 'none';
-        return;
-      }
-      document.getElementById('loggedOut').style.display = 'none';
-      document.getElementById('loggedIn').style.display = 'block';
-
-      Cloud.init();
-      Cloud.test(function (ok) {
-        var el = document.getElementById('cloudAuto');
-        if (el) {
-          el.textContent = ok ? '☁️ 云端：已连接（多设备同步开启）' : '📱 云端：离线（本机可用，联网后自动同步）';
-          el.style.color = ok ? '#2E7D32' : '#999';
-        }
-      });
-      Cloud.load('technicians', [], function (list) {
-        currentTech = null;
-        for (var i = 0; i < list.length; i++) {
-          if (list[i].accountId === user.id) { currentTech = list[i]; break; }
-        }
-        var tip = document.getElementById('statusTip');
-        var btn = document.getElementById('submitBtn');
-        if (currentTech) {
-          document.getElementById('name').value = currentTech.name || '';
-          document.getElementById('phone').value = currentTech.phone || '';
-          document.getElementById('address').value = currentTech.address || '';
-          document.getElementById('price').value = currentTech.price || '';
-          document.getElementById('services').value = currentTech.services || '';
-          photos = currentTech.photos ? currentTech.photos.slice() : [];
-          renderPhotos();
-          if (currentTech.status === '待审核') {
-            tip.className = 'status-tip tip-wait';
-            tip.textContent = '⏳ 资料审核中，审核通过后将展示在首页';
-            btn.textContent = '修改资料';
-          } else if (currentTech.status === '已拒绝') {
-            tip.className = 'status-tip tip-wait';
-            tip.textContent = '❌ 审核未通过，可修改后重新提交';
-            btn.textContent = '重新提交';
-          } else {
-            tip.className = 'status-tip tip-ok';
-            tip.textContent = '✅ 资料已通过，展示在首页（修改将直接生效）';
-            btn.textContent = '保存修改';
-          }
-        } else {
-          tip.className = '';
-          tip.textContent = '';
-          photos = [];
-          renderPhotos();
-          btn.textContent = '提交审核';
-        }
-      });
-    }
-    loadPage();
+    // 页面加载时立即执行（同步读本地）
+    initPage();
   </script>
 </body>
 </html>
