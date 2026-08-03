@@ -13,33 +13,38 @@
     .login-box input { width: 100%; padding: 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 12px; }
     .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; background: linear-gradient(135deg,#C2185B,#E91E63); color: #fff; }
     .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-sm { padding: 8px 14px; font-size: 13px; width: auto; }
     .btn-pass { background: #2E7D32; }
     .btn-reject { background: #F44336; }
     .btn-ghost { background: #fff; color: #C2185B; border: 1.5px solid #C2185B; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tab { flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: #fff; cursor: pointer; font-size: 14px; border: 1.5px solid #eee; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab { flex: 1; min-width: 80px; text-align: center; padding: 10px 6px; border-radius: 10px; background: #fff; cursor: pointer; font-size: 13px; border: 1.5px solid #eee; }
     .tab.active { background: #C2185B; color: #fff; border-color: #C2185B; }
     .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.05); }
     .tech-imgs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
     .tech-imgs img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
     .tech-field { font-size: 13px; margin: 4px 0; }
     .tech-field b { color: #C2185B; }
-    .row-btns { display: flex; gap: 10px; margin-top: 10px; }
+    .row-btns { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
     .row-btns .btn { margin: 0; }
     .empty { text-align: center; color: #bbb; padding: 30px; }
     .form-input, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 10px; font-family: inherit; }
     .form-textarea { resize: vertical; min-height: 70px; }
     .notice-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     .notice-del { color: #F44336; font-size: 13px; cursor: pointer; white-space: nowrap; }
-    .back-link { text-align: center; margin-top: 16px; }
-    .back-link a { color: #C2185B; text-decoration: none; font-size: 14px; }
-    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 14px; z-index: 9999; }
+    .back-link { text-align: center; margin-top: 16px; font-size: 13px; }
+    .back-link a { color: #C2185B; text-decoration: none; }
     .hist-item { border-left: 3px solid #2E7D32; padding-left: 10px; margin-bottom: 10px; }
     .hist-reject { border-color: #F44336; }
     .hist-name { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
     .hist-meta { font-size: 12px; color: #888; }
     .hist-ok { color: #2E7D32; }
     .hist-no { color: #F44336; }
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 14px; z-index: 99999; }
+    .info-bar { background: #E8F5E9; color: #2E7D32; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; text-align: center; }
+    .info-bar.warn { background: #FFF3E0; color: #E65100; }
+    .toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -49,19 +54,33 @@
   <div id="loginView">
     <div class="login-box">
       <div style="text-align:center;font-size:15px;margin-bottom:16px;color:#666;">请输入管理员密码</div>
-      <input type="password" id="adminPwd" placeholder="管理员密码">
+      <input type="password" id="adminPwd" placeholder="管理员密码" onkeydown="if(event.key==='Enter')adminLogin()">
       <button class="btn" onclick="adminLogin()">进入后台</button>
-      <div class="back-link"><a href="index.html">← 返回首页</a></div>
+      <div class="back-link" style="margin-top:14px;"><a href="index.html">← 返回首页</a></div>
     </div>
   </div>
 
   <!-- 后台主体 -->
   <div id="adminView" style="display:none;">
     <div class="container">
+
+      <!-- 数据来源说明 -->
+      <div class="info-bar" id="dataInfo">
+        📱 数据来源：本地存储（同一浏览器内数据互通）
+      </div>
+
       <div class="tabs">
-        <div class="tab active" id="tabReview" onclick="switchTab('review')">技师审核 <span id="pendingCount"></span></div>
+        <div class="tab active" id="tabReview" onclick="switchTab('review')">待审核 <span id="pendingCount"></span></div>
         <div class="tab" id="tabHistory" onclick="switchTab('history')">审核记录 <span id="historyCount"></span></div>
-        <div class="tab" id="tabNotice" onclick="switchTab('notice')">公告管理</div>
+        <div class="tab" id="tabAll" onclick="switchTab('all')">全部技师 <span id="allCount"></span></div>
+        <div class="tab" id="tabNotice" onclick="switchTab('notice')">公告</div>
+      </div>
+
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <button class="btn btn-sm btn-ghost" onclick="refreshData()">🔄 刷新</button>
+        <button class="btn btn-sm" style="background:#1565C0;" onclick="exportData()">📤 导出数据</button>
+        <button class="btn btn-sm" style="background:#666;" onclick="importData()">📥 导入数据</button>
       </div>
 
       <div id="reviewPanel">
@@ -70,6 +89,10 @@
 
       <div id="historyPanel" style="display:none;">
         <div id="historyList"></div>
+      </div>
+
+      <div id="allPanel" style="display:none;">
+        <div id="allList"></div>
       </div>
 
       <div id="noticePanel" style="display:none;">
@@ -81,8 +104,20 @@
         <div id="noticeList"></div>
       </div>
 
-      <div class="back-link">
-        <a href="index.html">← 返回首页</a> ｜ <a href="javascript:adminLogout()">退出后台</a>
+      <div class="back-link" style="margin-top:20px;">
+        <a href="index.html">← 返回首页</a> &nbsp;|&nbsp; <a href="javascript:adminLogout()">退出后台</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导入弹窗 -->
+  <div id="importModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:400px;width:90%;max-height:80vh;overflow-y:auto;">
+      <div style="font-weight:bold;margin-bottom:12px;">导入数据（粘贴 JSON）</div>
+      <textarea id="importArea" style="width:100%;height:160px;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px;font-size:12px;font-family:monospace;" placeholder="将导出的 JSON 数据粘贴到此处"></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button class="btn btn-pass" onclick="doImport()">确认导入</button>
+        <button class="btn" onclick="document.getElementById('importModal').style.display='none'">取消</button>
       </div>
     </div>
   </div>
@@ -90,10 +125,8 @@
   <script src="common.js"></script>
   <script src="cloud.js"></script>
   <script>
-    var ADMIN_PWD_KEY = 'rose_admin_pwd';
-    var AUDIT_LOG_KEY = 'rose_audit_log';
-
-    function getAdminPwd() { return Storage.get(ADMIN_PWD_KEY, 'admin123'); }
+    var AUDIT_LOG_KEY = 'audit_log';
+    var ADMIN_PWD = 'admin123';
 
     function toast(msg) {
       var el = document.createElement('div');
@@ -103,53 +136,132 @@
       setTimeout(function () { el.remove(); }, 2000);
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function formatTime(ts) {
-      if (!ts) return '';
-      var d = new Date(ts);
-      return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-    }
-
     function adminLogin() {
       var pwd = document.getElementById('adminPwd').value;
-      if (pwd === getAdminPwd()) {
-        Storage.set('admin_logged', true);
+      if (pwd === ADMIN_PWD) {
         document.getElementById('loginView').style.display = 'none';
         document.getElementById('adminView').style.display = 'block';
-        loadReview();
-        loadHistory();
-        loadNotices();
+        initAdmin();
       } else {
         toast('密码错误');
       }
     }
 
-    function adminLogout() { Storage.set('admin_logged', false); location.reload(); }
-
-    function switchTab(t) {
-      document.getElementById('tabReview').className = 'tab' + (t === 'review' ? ' active' : '');
-      document.getElementById('tabHistory').className = 'tab' + (t === 'history' ? ' active' : '');
-      document.getElementById('tabNotice').className = 'tab' + (t === 'notice' ? ' active' : '');
-      document.getElementById('reviewPanel').style.display = t === 'review' ? 'block' : 'none';
-      document.getElementById('historyPanel').style.display = t === 'history' ? 'block' : 'none';
-      document.getElementById('noticePanel').style.display = t === 'notice' ? 'block' : 'none';
+    function adminLogout() {
+      if (confirm('确定退出后台？')) { location.reload(); }
     }
 
-    // 保存审核日志
-    function saveAuditLog(entry) {
+    function initAdmin() {
+      refreshData();
+      loadHistory();
+      loadNotices();
+    }
+
+    function refreshData() {
+      // 全部从本地存储读取
+      Storage.load = Storage.get; // 兼容 cloud.js 的 load 写法
+      var list = Storage.get('technicians') || [];
+      renderAll(list);
+      renderPending(list);
+      updateCounts(list);
+    }
+
+    function updateCounts(list) {
+      var pending = list.filter(function (t) { return t.status === '待审核'; });
       var logs = JSON.parse(Storage.get(AUDIT_LOG_KEY) || '[]');
-      logs.unshift(entry);
-      if (logs.length > 200) logs = logs.slice(0, 200);
-      Storage.set(AUDIT_LOG_KEY, JSON.stringify(logs));
+      document.getElementById('pendingCount').textContent = pending.length ? '(' + pending.length + ')' : '';
+      document.getElementById('historyCount').textContent = logs.length ? '(' + logs.length + ')' : '';
+      document.getElementById('allCount').textContent = list.length ? '(' + list.length + ')' : '';
+    }
+
+    function renderCard(t, showButtons) {
+      var imgs = (t.photos || []).map(function (p) { return '<img src="' + p + '">'; }).join('');
+      var statusColor = t.status === '已通过' ? '#2E7D32' : t.status === '已拒绝' ? '#F44336' : '#FF9800';
+      var btns = '';
+      if (showButtons) {
+        btns = '<div class="row-btns">' +
+          '<button class="btn btn-pass btn-sm" onclick="approve(\'' + t.id + '\')">✅ 通过</button>' +
+          '<button class="btn btn-reject btn-sm" onclick="reject(\'' + t.id + '\')">❌ 拒绝</button>' +
+          '</div>';
+      }
+      return '<div class="card">' +
+        '<div class="tech-imgs">' + (imgs || '<div style="color:#bbb;font-size:12px;">无照片</div>') + '</div>' +
+        '<div class="tech-field"><b>姓名：</b>' + escapeHtml(t.name) + ' <span style="color:' + statusColor + ';font-size:12px;">[' + escapeHtml(t.status || '待审核') + ']</span></div>' +
+        '<div class="tech-field"><b>电话：</b>' + escapeHtml(t.phone) + '</div>' +
+        '<div class="tech-field"><b>地址：</b>' + escapeHtml(t.address) + '</div>' +
+        '<div class="tech-field"><b>价格：</b>¥' + escapeHtml(t.price) + ' / 次</div>' +
+        '<div class="tech-field"><b>项目：</b>' + escapeHtml(t.services) + '</div>' +
+        '<div class="tech-field"><b>提交：</b>' + formatTime(t.submitTime) + '</div>' +
+        btns +
+        '</div>';
+    }
+
+    function renderPending(list) {
+      var pending = list.filter(function (t) { return t.status === '待审核'; });
+      var box = document.getElementById('pendingList');
+      if (pending.length === 0) {
+        box.innerHTML = '<div class="empty">暂无待审核技师 ⭐ 所有申请已处理完毕</div>';
+        return;
+      }
+      box.innerHTML = pending.map(function (t) { return renderCard(t, true); }).join('');
+    }
+
+    function renderAll(list) {
+      var box = document.getElementById('allList');
+      if (list.length === 0) {
+        box.innerHTML = '<div class="empty">暂无技师数据</div>';
+        return;
+      }
+      box.innerHTML = list.map(function (t) { return renderCard(t, false); }).join('');
+    }
+
+    function approve(id) {
+      var list = Storage.get('technicians') || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+          list[i].status = '已通过';
+          list[i].auditTime = Date.now();
+          saveLog(list[i], '通过');
+          break;
+        }
+      }
+      Storage.set('technicians', list);
+      toast('已通过 ✓');
+      refreshData();
+      loadHistory();
+    }
+
+    function reject(id) {
+      var list = Storage.get('technicians') || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+          list[i].status = '已拒绝';
+          list[i].auditTime = Date.now();
+          saveLog(list[i], '拒绝');
+          break;
+        }
+      }
+      Storage.set('technicians', list);
+      toast('已拒绝 ✗');
+      refreshData();
+      loadHistory();
+    }
+
+    function saveLog(tech, action) {
+      var logs = JSON.parse(Storage.get(AUDIT_LOG_KEY) || '[]');
+      logs.unshift({
+        id: tech.id,
+        name: tech.name,
+        phone: tech.phone,
+        action: action,
+        time: Date.now()
+      });
+      if (logs.length > 500) logs = logs.slice(0, 500);
+      Storage.set(AUDIT_LOG_KEY, logs);
     }
 
     function loadHistory() {
       var logs = JSON.parse(Storage.get(AUDIT_LOG_KEY) || '[]');
-      document.getElementById('historyCount').textContent = logs.length ? '(' + logs.length + ')' : '';
       var box = document.getElementById('historyList');
       if (logs.length === 0) {
         box.innerHTML = '<div class="empty">暂无审核记录</div>';
@@ -158,121 +270,106 @@
       box.innerHTML = logs.map(function (e) {
         var cls = e.action === '通过' ? 'hist-ok' : 'hist-no';
         var borderCls = e.action === '通过' ? '' : ' hist-reject';
-        return '<div class="hist-item' + escapeHtml(borderCls) + '">' +
-          '<div class="hist-name">' + escapeHtml(e.name) + ' <span class="' + escapeHtml(cls) + '">【' + escapeHtml(e.action) + '】</span></div>' +
+        return '<div class="card hist-item' + escapeHtml(borderCls) + '">' +
+          '<div class="hist-name">' + escapeHtml(e.name) + ' <span class="' + escapeHtml(cls) + '" style="font-size:13px;">【' + escapeHtml(e.action) + '】</span></div>' +
           '<div class="hist-meta">电话：' + escapeHtml(e.phone) + '</div>' +
-          '<div class="hist-meta">审核时间：' + formatTime(e.time) + '</div>' +
-          (e.note ? '<div class="hist-meta">备注：' + escapeHtml(e.note) + '</div>' : '') +
-        '</div>';
+          '<div class="hist-meta">' + formatTime(e.time) + '</div>' +
+          '</div>';
       }).join('');
     }
 
-    function loadReview() {
-      Cloud.init();
-      Cloud.load('technicians', [], function (list) {
-        var pending = list.filter(function (t) { return t.status === '待审核'; });
-        document.getElementById('pendingCount').textContent = pending.length ? '(' + pending.length + ')' : '';
-        var box = document.getElementById('pendingList');
-        if (pending.length === 0) { box.innerHTML = '<div class="empty">暂无待审核技师</div>'; return; }
-        box.innerHTML = pending.map(function (t) {
-          var imgs = (t.photos || []).map(function (p) { return '<img src="' + p + '">'; }).join('');
-          return '<div class="card">' +
-            '<div class="tech-imgs">' + (imgs || '<div style="color:#bbb">无照片</div>') + '</div>' +
-            '<div class="tech-field"><b>姓名：</b>' + escapeHtml(t.name) + '</div>' +
-            '<div class="tech-field"><b>电话：</b>' + escapeHtml(t.phone) + '</div>' +
-            '<div class="tech-field"><b>地址：</b>' + escapeHtml(t.address) + '</div>' +
-            '<div class="tech-field"><b>价格：</b>¥' + escapeHtml(t.price) + ' / 次</div>' +
-            '<div class="tech-field"><b>项目：</b>' + escapeHtml(t.services) + '</div>' +
-            '<div class="tech-field"><b>提交时间：</b>' + formatTime(t.submitTime) + '</div>' +
-            '<div class="row-btns">' +
-              '<button class="btn btn-pass" onclick="approve(\'' + t.id + '\')">通过</button>' +
-              '<button class="btn btn-reject" onclick="reject(\'' + t.id + '\')">拒绝</button>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-      });
+    function exportData() {
+      var data = {
+        technicians: Storage.get('technicians') || [],
+        audit_log: JSON.parse(Storage.get(AUDIT_LOG_KEY) || '[]'),
+        notices: Storage.get('notices') || [],
+        exportTime: Date.now()
+      };
+      var json = JSON.stringify(data, null, 2);
+      var blob = new Blob([json], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'rose_backup_' + Date.now() + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('数据已导出');
     }
 
-    function approve(id) {
-      Cloud.load('technicians', [], function (list) {
-        for (var i = 0; i < list.length; i++) {
-          if (list[i].id === id) {
-            var t = list[i];
-            t.status = '已通过';
-            t.auditTime = Date.now();
-            saveAuditLog({ name: t.name, phone: t.phone, action: '通过', time: Date.now(), id: t.id });
-            break;
-          }
-        }
-        Cloud.save('technicians', list, function () {
-          toast('已通过 ✓');
-          loadReview();
-          loadHistory();
-        });
-      });
+    function importData() {
+      document.getElementById('importModal').style.display = 'flex';
     }
 
-    function reject(id) {
-      Cloud.load('technicians', [], function (list) {
-        for (var i = 0; i < list.length; i++) {
-          if (list[i].id === id) {
-            var t = list[i];
-            t.status = '已拒绝';
-            t.auditTime = Date.now();
-            saveAuditLog({ name: t.name, phone: t.phone, action: '拒绝', time: Date.now(), id: t.id });
-            break;
-          }
-        }
-        Cloud.save('technicians', list, function () {
-          toast('已拒绝 ✗');
-          loadReview();
-          loadHistory();
-        });
-      });
+    function doImport() {
+      var txt = document.getElementById('importArea').value.trim();
+      if (!txt) { toast('请粘贴数据'); return; }
+      try {
+        var data = JSON.parse(txt);
+        if (data.technicians) Storage.set('technicians', data.technicians);
+        if (data.audit_log) Storage.set(AUDIT_LOG_KEY, data.audit_log);
+        if (data.notices) Storage.set('notices', data.notices);
+        document.getElementById('importModal').style.display = 'none';
+        document.getElementById('importArea').value = '';
+        toast('导入成功 ✓');
+        refreshData();
+        loadHistory();
+        loadNotices();
+      } catch (e) {
+        toast('JSON 格式错误：' + e.message);
+      }
     }
 
+    function switchTab(t) {
+      document.getElementById('tabReview').className = 'tab' + (t === 'review' ? ' active' : '');
+      document.getElementById('tabHistory').className = 'tab' + (t === 'history' ? ' active' : '');
+      document.getElementById('tabAll').className = 'tab' + (t === 'all' ? ' active' : '');
+      document.getElementById('tabNotice').className = 'tab' + (t === 'notice' ? ' active' : '');
+      document.getElementById('reviewPanel').style.display = t === 'review' ? 'block' : 'none';
+      document.getElementById('historyPanel').style.display = t === 'history' ? 'block' : 'none';
+      document.getElementById('allPanel').style.display = t === 'all' ? 'block' : 'none';
+      document.getElementById('noticePanel').style.display = t === 'notice' ? 'block' : 'none';
+    }
+
+    // 公告
     function addNotice() {
       var title = document.getElementById('noticeTitle').value.trim();
       var content = document.getElementById('noticeContent').value.trim();
       if (!title || !content) { toast('请填写标题和内容'); return; }
-      Cloud.load('notices', [], function (list) {
-        list.unshift({ id: genId(), title: title, content: content, time: Date.now() });
-        Cloud.save('notices', list, function () {
-          document.getElementById('noticeTitle').value = '';
-          document.getElementById('noticeContent').value = '';
-          toast('公告已发布');
-          loadNotices();
-        });
-      });
+      var list = Storage.get('notices') || [];
+      list.unshift({ id: genId(), title: title, content: content, time: Date.now() });
+      Storage.set('notices', list);
+      document.getElementById('noticeTitle').value = '';
+      document.getElementById('noticeContent').value = '';
+      toast('公告已发布');
+      loadNotices();
     }
 
     function loadNotices() {
-      Cloud.load('notices', [], function (list) {
-        var box = document.getElementById('noticeList');
-        if (list.length === 0) { box.innerHTML = '<div class="empty">暂无公告</div>'; return; }
-        box.innerHTML = list.map(function (n) {
-          return '<div class="card notice-item">' +
-            '<div><b>' + escapeHtml(n.title) + '</b><div style="font-size:12px;color:#888;margin-top:4px;white-space:pre-wrap;">' + escapeHtml(n.content) + '</div><div style="font-size:11px;color:#bbb;margin-top:6px;">' + formatTime(n.time) + '</div></div>' +
-            '<div class="notice-del" onclick="delNotice(\'' + n.id + '\')">删除</div>' +
+      var list = Storage.get('notices') || [];
+      var box = document.getElementById('noticeList');
+      if (list.length === 0) { box.innerHTML = '<div class="empty">暂无公告</div>'; return; }
+      box.innerHTML = list.map(function (n) {
+        return '<div class="card notice-item">' +
+          '<div><b>' + escapeHtml(n.title) + '</b>' +
+          '<div style="font-size:12px;color:#888;margin-top:4px;white-space:pre-wrap;">' + escapeHtml(n.content) + '</div>' +
+          '<div style="font-size:11px;color:#bbb;margin-top:6px;">' + formatTime(n.time) + '</div></div>' +
+          '<div class="notice-del" onclick="delNotice(\'' + n.id + '\')">删除</div>' +
           '</div>';
-        }).join('');
-      });
+      }).join('');
     }
 
     function delNotice(id) {
-      Cloud.load('notices', [], function (list) {
-        var nl = list.filter(function (n) { return n.id !== id; });
-        Cloud.save('notices', nl, function () { loadNotices(); });
-      });
+      var list = Storage.get('notices') || [];
+      list = list.filter(function (n) { return n.id !== id; });
+      Storage.set('notices', list);
+      loadNotices();
     }
 
-    if (Storage.get('admin_logged', false)) {
+    // 页面加载时检查登录状态
+    if (Storage.get('admin_logged')) {
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('adminView').style.display = 'block';
-      Cloud.init();
-      loadReview();
-      loadHistory();
-      loadNotices();
+      initAdmin();
     }
   </script>
 </body>
