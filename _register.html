@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册 - 玫瑰按摩</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #C2185B, #E91E63);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .box {
+      background: #fff; border-radius: 16px; padding: 36px 28px; width: 100%; max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.15);
+    }
+    .header { text-align: center; margin-bottom: 26px; }
+    .header .icon { font-size: 46px; }
+    .header .title { font-size: 20px; font-weight: bold; color: #C2185B; margin-top: 6px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; color: #666; margin-bottom: 6px; display: block; font-weight: 500; }
+    .form-input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+      font-size: 15px; outline: none; transition: border-color .2s;
+    }
+    .form-input:focus { border-color: #C2185B; }
+    .btn {
+      width: 100%; padding: 13px; background: linear-gradient(135deg, #C2185B, #E91E63);
+      color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold;
+      cursor: pointer; margin-top: 8px; transition: opacity .2s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .link { text-align: center; margin-top: 16px; font-size: 13px; color: #999; }
+    .link a { color: #C2185B; text-decoration: none; font-weight: 500; }
+    .err { color: #F44336; font-size: 12px; margin-top: 4px; min-height: 16px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="header">
+      <div class="icon">🌹</div>
+      <div class="title">注册玫瑰按摩</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">设置账号 *</label>
+      <input class="form-input" id="account" placeholder="4-20位字母或数字">
+      <div class="err" id="accErr"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">设置密码 *</label>
+      <input class="form-input" id="password" type="password" placeholder="至少6位密码">
+    </div>
+    <div class="form-group">
+      <label class="form-label">确认密码 *</label>
+      <input class="form-input" id="password2" type="password" placeholder="再次输入密码">
+      <div class="err" id="pw2Err"></div>
+    </div>
+    <div class="err" id="errMsg"></div>
+    <button class="btn" id="submitBtn" onclick="doRegister()">注册账号</button>
+    <div class="link">已有账号？<a href="login.html">立即登录</a></div>
+  </div>
+  <script src="common.js"></script>
+  <script src="cloud.js"></script>
+  <script>
+    function doRegister() {
+      var account = document.getElementById('account').value.trim();
+      var password = document.getElementById('password').value;
+      var password2 = document.getElementById('password2').value;
+      var accErr = document.getElementById('accErr');
+      var pw2Err = document.getElementById('pw2Err');
+      var err = document.getElementById('errMsg');
+      var btn = document.getElementById('submitBtn');
+      accErr.textContent = ''; pw2Err.textContent = ''; err.textContent = '';
+      if (!account || account.length < 4 || account.length > 20) { accErr.textContent = '账号4-20位字母或数字'; return; }
+      if (!/^[a-zA-Z0-9]+$/.test(account)) { accErr.textContent = '账号只能包含字母和数字'; return; }
+      if (!password || password.length < 6) { err.textContent = '密码至少6位'; return; }
+      if (password !== password2) { pw2Err.textContent = '两次密码不一致'; return; }
+      btn.disabled = true; btn.textContent = '注册中...';
+      var newUser = { id: 'uid_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), account: account, password: password, createTime: Date.now() };
+      var allAccounts = JSON.parse(localStorage.getItem('rose_accounts') || '[]');
+      for (var i = 0; i < allAccounts.length; i++) { if (allAccounts[i].account === account) { err.textContent = '该账号已被注册'; btn.disabled = false; btn.textContent = '注册账号'; return; } }
+      allAccounts.unshift(newUser);
+      localStorage.setItem('rose_accounts', JSON.stringify(allAccounts));
+      localStorage.setItem('rose_current_user', JSON.stringify({ id: newUser.id, account: account }));
+      alert('注册成功！请完善技师资料');
+      location.href = 'profile.html';
+    }
+  </script>
+</body>
+</html>
