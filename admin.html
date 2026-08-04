@@ -131,7 +131,27 @@
       if (confirm('确定退出？')) location.reload();
     }
 
-    // 从云端加载所有数据
+    // 从 localStorage 读取
+    function lsGet(key, def) {
+      try { var v = localStorage.getItem('rose_' + key); return v ? JSON.parse(v) : def; }
+      catch (e) { return def; }
+    }
+
+    // 写入 localStorage + 云端
+    function lsSave(key, data, cb) {
+      try { localStorage.setItem('rose_' + key, JSON.stringify(data)); } catch (e) {}
+      Cloud.save(key, data, cb);
+    }
+
+    // 设置云端状态条
+    function setCloudStatus(text, color, bg) {
+      var el = document.getElementById('cloudStatus');
+      el.textContent = text;
+      el.style.background = bg || '#E3F2FD';
+      el.style.color = color || '#1565C0';
+    }
+
+    // 从云端加载所有数据（云端失败则降级到本地）
     function loadAll() {
       document.getElementById('cloudStatus').textContent = '☁️ 正在连接云端...';
       document.getElementById('pendingList').innerHTML = '<div class="loading">加载中...</div>';
@@ -141,33 +161,38 @@
 
       Cloud.test(function (ok) {
         if (!ok) {
-          document.getElementById('cloudStatus').textContent = '⚠️ 云端连接失败，请检查网络';
-          document.getElementById('cloudStatus').style.background = '#FFF3E0';
-          document.getElementById('cloudStatus').style.color = '#E65100';
+          // 云端不可用 → 降级到本地，显示警告
+          setCloudStatus('⚠️ 云端不可用（本地模式）', '#E65100', '#FFF3E0');
+          var techs = lsGet('technicians', []);
+          var logs  = lsGet('audit_log', []);
+          var notes = lsGet('notices', []);
+          renderPending(techs);
+          renderAll(techs);
+          renderHistory(logs);
+          renderNotices(notes);
+          updateCounts(techs, logs);
           return;
         }
-        document.getElementById('cloudStatus').textContent = '☁️ 云端已连接（所有设备数据实时同步）';
-        document.getElementById('cloudStatus').style.background = '#E3F2FD';
-        document.getElementById('cloudStatus').style.color = '#1565C0';
-
-        // 同时加载技师、审核记录、公告
+        // 云端可用
+        setCloudStatus('☁️ 云端已连接（所有设备数据实时同步）');
         Cloud.load(TECH_KEY, [], function (techs) {
           renderPending(techs || []);
           renderAll(techs || []);
-          updateCounts(techs || []);
+          updateCounts(techs || [], null);
         });
-        Cloud.load(LOG_KEY, [], function (logs) { renderHistory(logs || []); });
+        Cloud.load(LOG_KEY, [], function (logs) {
+          renderHistory(logs || []);
+          updateCounts(null, logs || []);
+        });
         Cloud.load(NOTICE_KEY, [], function (notes) { renderNotices(notes || []); });
       });
     }
 
-    function updateCounts(techs) {
-      var pending = techs.filter(function (t) { return t.status === '待审核'; });
-      Cloud.load(LOG_KEY, [], function (logs) {
-        document.getElementById('pendingCount').textContent = pending.length ? '(' + pending.length + ')' : '';
-        document.getElementById('historyCount').textContent = (logs || []).length ? '(' + logs.length + ')' : '';
-        document.getElementById('allCount').textContent = techs.length ? '(' + techs.length + ')' : '';
-      });
+    function updateCounts(techs, logs) {
+      var pending = (techs || []).filter(function (t) { return t.status === '待审核'; });
+      document.getElementById('pendingCount').textContent = pending.length ? '(' + pending.length + ')' : '';
+      document.getElementById('historyCount').textContent = ((logs || []).length) ? '(' + (logs || []).length + ')' : '';
+      document.getElementById('allCount').textContent = (techs || []).length ? '(' + techs.length + ')' : '';
     }
 
     function renderCard(t, showButtons) {
@@ -224,7 +249,7 @@
         tech.status = action === 'approve' ? '已通过' : '已拒绝';
         tech.auditTime = Date.now();
 
-        Cloud.save(TECH_KEY, list, function () {});
+        lsSave(TECH_KEY, list, function () {});
 
         // 记录审核历史
         Cloud.load(LOG_KEY, [], function (logs) {
@@ -238,7 +263,7 @@
             time: Date.now()
           });
           if (logs.length > 500) logs = logs.slice(0, 500);
-          Cloud.save(LOG_KEY, logs, function () {});
+          lsSave(LOG_KEY, logs, function () {});
         });
 
         toast(action === 'approve' ? '已通过 ✓' : '已拒绝 ✗');
@@ -284,7 +309,7 @@
       Cloud.load(NOTICE_KEY, [], function (list) {
         list = list || [];
         list.unshift({ id: genId(), title: title, content: content, time: Date.now() });
-        Cloud.save(NOTICE_KEY, list, function () {
+        lsSave(NOTICE_KEY, list, function () {
           document.getElementById('noticeTitle').value = '';
           document.getElementById('noticeContent').value = '';
           toast('公告已发布');
@@ -311,7 +336,7 @@
       if (!confirm('确定删除该公告？')) return;
       Cloud.load(NOTICE_KEY, [], function (list) {
         list = (list || []).filter(function (n) { return n.id !== id; });
-        Cloud.save(NOTICE_KEY, list, function () { toast('已删除'); renderNotices(list); });
+        lsSave(NOTICE_KEY, list, function () { toast('已删除'); renderNotices(list); });
       });
     }
 
