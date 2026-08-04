@@ -19,7 +19,7 @@
     .btn:active { transform: scale(.98); }
     .btn:disabled { opacity: .6; cursor: not-allowed; }
     .btn-ghost { background: #fff; color: #C2185B; border: 1.5px solid #C2185B; }
-    .status-tip { font-size: 14px; padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; line-height: 1.5; }
+    .status-tip { font-size: 14px; padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; line-height: 1.6; }
     .tip-wait { background: #FFF3E0; color: #E65100; border-left: 4px solid #FF9800; }
     .tip-ok { background: #E8F5E9; color: #2E7D32; border-left: 4px solid #2E7D32; }
     .tip-reject { background: #FFEBEE; color: #C62828; border-left: 4px solid #F44336; }
@@ -31,11 +31,9 @@
     .photo-add { width: 80px; height: 80px; border: 1.5px dashed #C2185B; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #C2185B; cursor: pointer; }
     .empty { text-align: center; color: #bbb; padding: 40px 20px; }
     .empty a { color: #C2185B; }
-    .logout-btn { color: #999; font-size: 13px; cursor: pointer; text-align: center; margin-top: 10px; }
+    .logout-btn { color: #999; font-size: 13px; cursor: pointer; text-center; margin-top: 10px; text-align: center; }
     .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.8); color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 14px; z-index: 99999; }
-    .cloud-box { font-size: 13px; color: #666; }
-    .settings-toggle { color: #C2185B; font-size: 13px; cursor: pointer; text-decoration: underline; }
-    .required-hint { font-size: 11px; color: #bbb; }
+    .loading { text-align: center; padding: 30px; color: #bbb; }
   </style>
 </head>
 <body>
@@ -46,51 +44,43 @@
     </div>
 
     <div id="loggedIn" style="display:none;">
-      <!-- 状态提示 -->
-      <div id="statusTip"></div>
+      <div id="loadTip" class="loading">☁️ 正在加载云端数据...</div>
+      <div id="statusTip" style="display:none;"></div>
 
-      <div class="card">
-        <div class="form-group">
-          <label class="form-label">技师姓名 * <span class="required-hint">必填</span></label>
-          <input class="form-input" id="name" placeholder="例如：小芳">
+      <div id="formSection" style="display:none;">
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">技师姓名 *</label>
+            <input class="form-input" id="name" placeholder="例如：小芳">
+          </div>
+          <div class="form-group">
+            <label class="form-label">联系电话 *</label>
+            <input class="form-input" id="phone" placeholder="例如：13800138000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">服务地址 *</label>
+            <input class="form-input" id="address" placeholder="例如：南京市XX路XX号">
+          </div>
+          <div class="form-group">
+            <label class="form-label">价格（元/次）*</label>
+            <input class="form-input" id="price" placeholder="例如：198" type="number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">服务项目 *</label>
+            <textarea class="form-textarea" id="services" placeholder="例如：全身推拿、肩颈按摩、精油SPA"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">形象照片（最多3张）</label>
+            <div class="photos" id="photoBox"></div>
+            <div class="photo-add" id="photoAdd" onclick="document.getElementById('photoFile').click()">+</div>
+            <input type="file" id="photoFile" accept="image/*" multiple style="display:none;" onchange="onPhotos(event)">
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">联系电话 *</label>
-          <input class="form-input" id="phone" placeholder="例如：13800138000">
-        </div>
-        <div class="form-group">
-          <label class="form-label">服务地址 *</label>
-          <input class="form-input" id="address" placeholder="例如：南京市XX路XX号">
-        </div>
-        <div class="form-group">
-          <label class="form-label">价格（元/次）*</label>
-          <input class="form-input" id="price" placeholder="例如：198" type="number">
-        </div>
-        <div class="form-group">
-          <label class="form-label">服务项目 *</label>
-          <textarea class="form-textarea" id="services" placeholder="例如：全身推拿、肩颈按摩、精油SPA"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">形象照片（最多3张）</label>
-          <div class="photos" id="photoBox"></div>
-          <div class="photo-add" id="photoAdd" onclick="document.getElementById('photoFile').click()">+</div>
-          <input type="file" id="photoFile" accept="image/*" multiple style="display:none;" onchange="onPhotos(event)">
-        </div>
+
+        <button class="btn" id="submitBtn" onclick="submitOrUpdate()">提交审核</button>
+
+        <div class="logout-btn" onclick="logout()">退出登录</div>
       </div>
-
-      <button class="btn" id="submitBtn" onclick="submitOrUpdate()">提交审核</button>
-
-      <div class="card cloud-box" style="margin-top:16px;">
-        <div class="settings-toggle" onclick="toggleCloud()">⚙️ 云端同步设置（多设备共享数据）</div>
-        <div id="cloudPanel" style="display:none; margin-top:10px;">
-          <input class="form-input" id="gistId" placeholder="Gist ID（可选）">
-          <input class="form-input" id="gistToken" placeholder="GitHub Token（可选，无则仅本机使用）">
-          <button class="btn btn-ghost" onclick="saveCloud()">保存并测试</button>
-          <div id="cloudStatus" style="margin-top:8px;font-size:12px;"></div>
-        </div>
-      </div>
-
-      <div class="logout-btn" onclick="logout()">退出登录</div>
     </div>
   </div>
 
@@ -98,11 +88,11 @@
   <script src="cloud.js"></script>
   <script>
     var photos = [];
-    var myTechId = null; // 当前用户的技师记录ID
+    var myTech = null; // 当前用户在云端的技师记录
+    var user = null;
 
-    // 页面加载时立即从本地存储读取我的审核状态
     function initPage() {
-      var user = getCurrentUser();
+      user = getCurrentUser();
       if (!user) {
         document.getElementById('loggedOut').style.display = 'block';
         document.getElementById('loggedIn').style.display = 'none';
@@ -111,42 +101,45 @@
       document.getElementById('loggedOut').style.display = 'none';
       document.getElementById('loggedIn').style.display = 'block';
 
-      // 从本地存储立即读取（同步，无延迟）
-      var list = Storage.get('technicians') || [];
-      var me = null;
-      for (var i = 0; i < list.length; i++) {
-        if (list[i].accountId === user.id) { me = list[i]; break; }
-      }
+      // 从云端加载我的技师记录
+      Cloud.load('technicians', [], function (list) {
+        document.getElementById('loadTip').style.display = 'none';
+        document.getElementById('formSection').style.display = 'block';
 
-      // 渲染状态
+        myTech = null;
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].accountId === user.id) { myTech = list[i]; break; }
+        }
+        renderStatus();
+      });
+    }
+
+    function renderStatus() {
       var tip = document.getElementById('statusTip');
       var btn = document.getElementById('submitBtn');
-      if (me) {
-        myTechId = me.id;
-        document.getElementById('name').value = me.name || '';
-        document.getElementById('phone').value = me.phone || '';
-        document.getElementById('address').value = me.address || '';
-        document.getElementById('price').value = me.price || '';
-        document.getElementById('services').value = me.services || '';
-        photos = me.photos ? me.photos.slice() : [];
+      tip.style.display = 'block';
+
+      if (myTech) {
+        document.getElementById('name').value = myTech.name || '';
+        document.getElementById('phone').value = myTech.phone || '';
+        document.getElementById('address').value = myTech.address || '';
+        document.getElementById('price').value = myTech.price || '';
+        document.getElementById('services').value = myTech.services || '';
+        photos = myTech.photos ? myTech.photos.slice() : [];
         renderPhotos();
 
-        if (me.status === '待审核') {
+        if (myTech.status === '待审核') {
           tip.className = 'status-tip tip-wait';
-          tip.innerHTML = '⏳ <b>审核中</b><br>您的资料已提交，等待管理员审核，请耐心等待...';
+          tip.innerHTML = '⏳ <b>审核中</b><br>您的资料已提交，请耐心等待管理员审核...';
           btn.textContent = '修改资料并重新提交';
-        } else if (me.status === '已拒绝') {
+        } else if (myTech.status === '已拒绝') {
           tip.className = 'status-tip tip-reject';
           tip.innerHTML = '❌ <b>审核未通过</b><br>请修改下方资料后重新提交';
           btn.textContent = '修改后重新提交';
-        } else if (me.status === '已通过') {
+        } else if (myTech.status === '已通过') {
           tip.className = 'status-tip tip-ok';
-          tip.innerHTML = '✅ <b>已通过审核</b><br>您的资料已展示在首页！修改后将重新审核';
+          tip.innerHTML = '✅ <b>已通过审核</b><br>您的资料已展示在首页！';
           btn.textContent = '修改资料';
-        } else {
-          tip.className = 'status-tip tip-new';
-          tip.innerHTML = '📋 请填写完整资料后提交审核';
-          btn.textContent = '提交审核';
         }
       } else {
         tip.className = 'status-tip tip-new';
@@ -155,40 +148,6 @@
         photos = [];
         renderPhotos();
       }
-    }
-
-    function toggleCloud() {
-      var p = document.getElementById('cloudPanel');
-      p.style.display = p.style.display === 'none' ? 'block' : 'none';
-      if (p.style.display === 'block') {
-        document.getElementById('gistId').value = Storage.get('cloud_gist', '');
-        document.getElementById('gistToken').value = Storage.get('cloud_token', '');
-      }
-    }
-
-    function saveCloud() {
-      var gid = document.getElementById('gistId').value.trim();
-      var tok = document.getElementById('gistToken').value.trim();
-      Storage.set('cloud_gist', gid);
-      Storage.set('cloud_token', tok);
-      Cloud.init();
-      var st = document.getElementById('cloudStatus');
-      if (!Cloud.enabled()) {
-        st.textContent = '未配置 Token，仅本机使用';
-        st.style.color = '#999';
-        return;
-      }
-      st.textContent = '正在测试连接...';
-      st.style.color = '#666';
-      Cloud.test(function (ok) {
-        if (ok) {
-          st.textContent = '✅ 云端连接成功，多设备可同步';
-          st.style.color = '#2E7D32';
-        } else {
-          st.textContent = '❌ 连接失败，请检查 Gist ID 和 Token';
-          st.style.color = '#F44336';
-        }
-      });
     }
 
     function renderPhotos() {
@@ -220,7 +179,6 @@
     }
 
     function submitOrUpdate() {
-      var user = getCurrentUser();
       if (!user) { location.href = 'login.html'; return; }
       var name = document.getElementById('name').value.trim();
       var phone = document.getElementById('phone').value.trim();
@@ -239,15 +197,8 @@
       btn.disabled = true;
       btn.textContent = '提交中...';
 
-      // 查本地记录（保留原有id和submitTime）
-      var list = Storage.get('technicians') || [];
-      var idx = -1;
-      for (var i = 0; i < list.length; i++) {
-        if (list[i].accountId === user.id) { idx = i; break; }
-      }
-
       var entry = {
-        id: idx >= 0 ? list[idx].id : genId(),
+        id: myTech ? myTech.id : 'uid_' + Date.now(),
         accountId: user.id,
         account: user.account,
         name: name,
@@ -257,33 +208,38 @@
         services: services,
         photos: photos,
         status: '待审核',
-        submitTime: idx >= 0 ? list[idx].submitTime : Date.now(),
+        submitTime: myTech ? myTech.submitTime : Date.now(),
         updateTime: Date.now()
       };
 
-      if (idx >= 0) {
-        list[idx] = entry;
-      } else {
-        list.unshift(entry);
-      }
+      // 立即写入云端（saveNow 立即发请求，不防抖）
+      Cloud.saveNow('technicians', [], function () {}); // 先触发云端读取触发器
 
-      // 立即写本地存储
-      Storage.set('technicians', list);
-      myTechId = entry.id;
+      // 从云端读取完整列表
+      Cloud.load('technicians', [], function (list) {
+        var found = false;
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].accountId === user.id) { list[i] = entry; found = true; break; }
+        }
+        if (!found) list.unshift(entry);
 
-      // 提示用户
-      var tip = document.getElementById('statusTip');
-      tip.className = 'status-tip tip-wait';
-      tip.innerHTML = '⏳ <b>提交成功！</b><br>等待管理员审核，请耐心等待...';
-      btn.textContent = '修改资料并重新提交';
-      btn.disabled = false;
-      toast('已提交，等待审核');
-
-      // 后台尝试云端同步（有 Token 才发）
-      Cloud.save('technicians', list, function () {});
+        // 写入云端
+        Cloud.saveNow('technicians', list, function (ok) {
+          if (ok) {
+            myTech = entry;
+            toast('已提交，等待审核');
+            btn.textContent = '修改资料并重新提交';
+            btn.disabled = false;
+            renderStatus();
+          } else {
+            toast('网络异常，请重试');
+            btn.textContent = '提交审核';
+            btn.disabled = false;
+          }
+        });
+      });
     }
 
-    // 页面加载时立即执行（同步读本地）
     initPage();
   </script>
 </body>
