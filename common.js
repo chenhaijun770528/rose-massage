@@ -1,5 +1,5 @@
 // common.js - 本地存储 + 工具函数
-// 所有页面共享，Storage = localStorage 前缀隔离
+// Storage = localStorage 前缀隔离（仅本地记住登录状态）
 var Storage = {
   prefix: 'rose_',
   get: function (k, def) {
@@ -19,10 +19,10 @@ function genId() {
 
 function toast(msg) {
   var el = document.createElement('div');
-  el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:12px 28px;border-radius:10px;font-size:14px;z-index:99999;white-space:nowrap;';
+  el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:14px 30px;border-radius:12px;font-size:15px;z-index:99999;white-space:nowrap;';
   el.textContent = msg;
   document.body.appendChild(el);
-  setTimeout(function () { el.style.opacity = '0'; el.style.transition = 'opacity .4s'; setTimeout(function () { el.remove(); }, 400); }, 1800);
+  setTimeout(function () { el.style.opacity = '0'; el.style.transition = 'opacity .4s'; setTimeout(function () { el.remove(); }, 400); }, 2000);
 }
 
 function escapeHtml(str) {
@@ -52,7 +52,6 @@ function logout() {
   location.href = 'login.html';
 }
 
-// 图片压缩：文件 → Base64
 function compressImage(file, maxW, maxH, quality, cb) {
   var fr = new FileReader();
   fr.onload = function (e) {
