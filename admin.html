@@ -124,22 +124,22 @@ function genId(){
  return Date.now().toString(36)+Math.random().toString(36).slice(2);
 }
 </script>
- <script src="https://gist.githubusercontent.com/chenhaijun770528/384d953f40b055c0f881a4d462b821c7/raw/cloud.js"></script>
- <script>
- var ADMIN_PWD = 'admin123';
- var TECH_KEY = 'technicians';
- var LOG_KEY = 'audit_log';
- var NOTICE_KEY = 'notices';
+<script src="https://gist.githubusercontent.com/chenhaijun770528/384d953f40b055c0f881a4d462b821c7/raw/cloud.js"></script>
+<script>
+var ADMIN_PWD = 'admin123';
+var TECH_KEY = 'technicians';
+var LOG_KEY = 'audit_log';
+var NOTICE_KEY = 'notices';
 
- function toast(msg) {
+function toast(msg) {
  var el = document.createElement('div');
  el.className = 'toast';
  el.textContent = msg;
  document.body.appendChild(el);
  setTimeout(function () { el.remove(); }, 2200);
- }
+}
 
- function adminLogin() {
+function adminLogin() {
  var pwd = document.getElementById('adminPwd').value;
  if (pwd === ADMIN_PWD) {
  localStorage.setItem('rose_admin_logged','1');
@@ -149,33 +149,33 @@ function genId(){
  } else {
  toast('密码错误');
  }
- }
+}
 
- function adminLogout() {
+function adminLogout() {
  if (confirm('确定退出？')){
  localStorage.removeItem('rose_admin_logged');
  location.reload();
  }
- }
+}
 
- function lsGet(key, def) {
+function lsGet(key, def) {
  try { var v = localStorage.getItem('rose_' + key); return v ? JSON.parse(v) : def; }
  catch (e) { return def; }
- }
+}
 
- function lsSave(key, data, cb) {
+function lsSave(key, data, cb) {
  try { localStorage.setItem('rose_' + key, JSON.stringify(data)); } catch (e) {}
  Cloud.save(key, data, cb);
- }
+}
 
- function setCloudStatus(text, color, bg) {
+function setCloudStatus(text, color, bg) {
  var el = document.getElementById('cloudStatus');
  el.textContent = text;
  el.style.background = bg || '#E3F2FD';
  el.style.color = color || '#1565C0';
- }
+}
 
- function loadAll() {
+function loadAll() {
  document.getElementById('cloudStatus').textContent = '☁️ 正在连接云端...';
  document.getElementById('pendingList').innerHTML = '<div class="loading">加载中...</div>';
  document.getElementById('historyList').innerHTML = '<div class="loading">加载中...</div>';
@@ -207,15 +207,15 @@ function genId(){
  });
  Cloud.load(NOTICE_KEY, [], function (notes) { renderNotices(notes || []); });
  });
- }
+}
 
- function updateCounts(techs, logs) {
+function updateCounts(techs, logs) {
  var pending = (techs || []).filter(function (t) { return t.status === '待审核'; });
  document.getElementById('pendingCount').textContent = pending.length ? '(' + pending.length + ')' : '';
  document.getElementById('historyCount').textContent = ((logs || []).length) ? '(' + (logs || []).length + ')' : '';
- }
+}
 
- function renderCard(t, showButtons) {
+function renderCard(t, showButtons) {
  var imgs = (t.photos || []).map(function (p) { return '<img src="' + p + '">'; }).join('');
  var statusColor = t.status === '已通过' ? '#2E7D32' : t.status === '已拒绝' ? '#F44336' : '#FF9800';
  var btns = '';
@@ -236,9 +236,9 @@ function genId(){
  '<div class="tech-field" style="color:#888;"><b>提交：</b>' + formatTime(t.submitTime) + '</div>' +
  btns +
  '</div>';
- }
+}
 
- function renderPending(list) {
+function renderPending(list) {
  var pending = list.filter(function (t) { return t.status === '待审核'; });
  var box = document.getElementById('pendingList');
  if (pending.length === 0) {
@@ -246,18 +246,18 @@ function genId(){
  return;
  }
  box.innerHTML = pending.map(function (t) { return renderCard(t, true); }).join('');
- }
+}
 
- function renderAll(list) {
+function renderAll(list) {
  var box = document.getElementById('allList');
  if (list.length === 0) {
  box.innerHTML = '<div class="empty">暂无技师数据</div>';
  return;
  }
  box.innerHTML = list.map(function (t) { return renderCard(t, false); }).join('');
- }
+}
 
- function doAudit(id, action) {
+function doAudit(id, action) {
  Cloud.load(TECH_KEY, [], function (list) {
  var tech = null;
  for (var i = 0; i < list.length; i++) {
@@ -287,12 +287,12 @@ function genId(){
  toast(action === 'approve' ? '已通过 ✓' : '已拒绝 ✗');
  loadAll();
  });
- }
+}
 
- function approve(id) { doAudit(id, 'approve'); }
- function reject(id) { doAudit(id, 'reject'); }
+function approve(id) { doAudit(id, 'approve'); }
+function reject(id) { doAudit(id, 'reject'); }
 
- function renderHistory(logs) {
+function renderHistory(logs) {
  var box = document.getElementById('historyList');
  if (logs.length === 0) {
  box.innerHTML = '<div class="empty">暂无审核记录</div>';
@@ -307,9 +307,9 @@ function genId(){
  '<div class="hist-meta">' + formatTime(e.time) + '</div>' +
  '</div>';
  }).join('');
- }
+}
 
- function switchTab(t) {
+function switchTab(t) {
  document.getElementById('tabReview').className = 'tab' + (t === 'review' ? ' active' : '');
  document.getElementById('tabHistory').className = 'tab' + (t === 'history' ? ' active' : '');
  document.getElementById('tabAll').className = 'tab' + (t === 'all' ? ' active' : '');
@@ -318,9 +318,9 @@ function genId(){
  document.getElementById('historyPanel').style.display = t === 'history' ? 'block' : 'none';
  document.getElementById('allPanel').style.display = t === 'all' ? 'block' : 'none';
  document.getElementById('noticePanel').style.display = t === 'notice' ? 'block' : 'none';
- }
+}
 
- function addNotice() {
+function addNotice() {
  var title = document.getElementById('noticeTitle').value.trim();
  var content = document.getElementById('noticeContent').value.trim();
  if (!title || !content) { toast('请填写标题和内容'); return; }
@@ -334,10 +334,9 @@ function genId(){
  renderNotices(list);
  });
  });
- }
- }
+}
 
- function renderNotices(list) {
+function renderNotices(list) {
  var box = document.getElementById('noticeList');
  if (list.length === 0) { box.innerHTML = '<div class="empty">暂无公告</div>'; return; }
  box.innerHTML = list.map(function (n) {
@@ -349,21 +348,22 @@ function genId(){
  '<div class="notice-del" onclick="delNotice(\'' + n.id + '\')">删除</div>' +
  '</div>';
  }).join('');
- }
+}
 
- function delNotice(id) {
+function delNotice(id) {
  if (!confirm('确定删除该公告？')) return;
  Cloud.load(NOTICE_KEY, [], function (list) {
  list = (list || []).filter(function (n) { return n.id !== id; });
  lsSave(NOTICE_KEY, list, function () { toast('已删除'); renderNotices(list); });
  });
- }
+}
 
- if(localStorage.getItem('rose_admin_logged') === '1'){
+// 记住登录状态
+if(localStorage.getItem('rose_admin_logged') === '1'){
  document.getElementById('loginView').style.display = 'none';
  document.getElementById('adminView').style.display = 'block';
  loadAll();
- }
- </script>
+}
+</script>
 </body>
 </html>
