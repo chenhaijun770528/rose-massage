@@ -112,32 +112,32 @@
   </div>
 
   <script src="common.js"></script>
-  <script src="cloud.js"></script>
+  <script src="https://gist.githubusercontent.com/chenhaijun770528/384d953f40b055c0f881a4d462b821c7/raw/cloud.js"></script>
   <script>
     function goPage(p) { location.href = p; }
 
     function renderTechnicianCard(t, isNew) {
-      var photoHtml = t.photos && t.photos.length > 0
-        ? '<img class="tech-photo" src="' + t.photos[0] + '" alt="">'
+      var photoHtml = t.photos && Array.isArray(t.photos) && t.photos.length > 0
+        ? '<img class="tech-photo" src="' + escapeHtml(t.photos[0]) + '" alt="">'
         : '<div class="tech-photo-placeholder">💆</div>';
       var newBadge = isNew ? '<span class="badge-new">新人</span>' : '';
-      return '<div class="tech-card" onclick="goDetail(\'' + t.id + '\')">' +
+      return '<div class="tech-card" onclick="goDetail(\'' + escapeHtml(t.id) + '\')">' +
         photoHtml +
         '<div class="tech-info">' +
           '<div class="tech-name">' + escapeHtml(t.name) + newBadge + '</div>' +
-          '<div class="tech-price">¥' + escapeHtml(t.price) + ' / 次</div>' +
+          '<div class="tech-price">¥' + escapeHtml(String(t.price)) + ' / 次</div>' +
           '<div class="tech-services">' + escapeHtml(t.services) + '</div>' +
         '</div>' +
       '</div>';
     }
 
-    function goDetail(id) { location.href = 'technician-detail.html?id=' + id; }
+    function goDetail(id) { location.href = 'technician-detail.html?id=' + encodeURIComponent(id); }
 
     function render(data) {
-      var technicians = (data.technicians || []).filter(function (t) {
+      var technicians = (Array.isArray(data.technicians) ? data.technicians : []).filter(function (t) {
         return t.status === '已通过';
       });
-      var notices = data.notices || [];
+      var notices = Array.isArray(data.notices) ? data.notices : [];
 
       // 公告
       var nl = document.getElementById('noticeList');
@@ -184,8 +184,14 @@
       Cloud.init();
       var data = { technicians: [], notices: [] };
       var pending = 2;
-      Cloud.load('technicians', [], function (v) { data.technicians = v; if (--pending === 0) render(data); });
-      Cloud.load('notices', [], function (v) { data.notices = v; if (--pending === 0) render(data); });
+      Cloud.load('technicians', [], function (v) {
+        data.technicians = v;
+        if (--pending === 0) render(data);
+      });
+      Cloud.load('notices', [], function (v) {
+        data.notices = v;
+        if (--pending === 0) render(data);
+      });
     }
     init();
   </script>
