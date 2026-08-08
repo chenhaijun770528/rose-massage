@@ -124,7 +124,8 @@ function genId(){
  return Date.now().toString(36)+Math.random().toString(36).slice(2);
 }
 </script>
-<script src="https://gist.githubusercontent.com/chenhaijun770528/384d953f40b055c0f881a4d462b821c7/raw/cloud.js"></script>
+  <script src="jsonbin.js"></script>
+
 <script>
 var ADMIN_PWD = 'admin123';
 var TECH_KEY = 'technicians';
@@ -165,10 +166,10 @@ function lsGet(key, def) {
 
 function lsSave(key, data, cb) {
  try { localStorage.setItem('rose_' + key, JSON.stringify(data)); } catch (e) {}
- Cloud.save(key, data, cb);
+ jb.save(key, data, cb);
 }
 
-function setCloudStatus(text, color, bg) {
+function setjbStatus(text, color, bg) {
  var el = document.getElementById('cloudStatus');
  el.textContent = text;
  el.style.background = bg || '#E3F2FD';
@@ -176,15 +177,15 @@ function setCloudStatus(text, color, bg) {
 }
 
 function loadAll() {
- document.getElementById('cloudStatus').textContent = '☁️ 正在连接云端...';
+ document.getElementById('jbStatus').textContent = '☁️ 正在连接云端...';
  document.getElementById('pendingList').innerHTML = '<div class="loading">加载中...</div>';
  document.getElementById('historyList').innerHTML = '<div class="loading">加载中...</div>';
  document.getElementById('allList').innerHTML = '<div class="loading">加载中...</div>';
  document.getElementById('noticeList').innerHTML = '<div class="loading">加载中...</div>';
 
- Cloud.test(function (ok) {
+jb.test(function (ok) {
  if (!ok) {
- setCloudStatus('⚠️ 云端不可用（本地模式）', '#E65100', '#FFF3E0');
+ setjbStatus('⚠️ 云端不可用（本地模式）', '#E65100', '#FFF3E0');
  var techs = lsGet('technicians', []);
  var logs = lsGet('audit_log', []);
  var notes = lsGet('notices', []);
@@ -195,17 +196,17 @@ function loadAll() {
  updateCounts(techs, logs);
  return;
  }
- setCloudStatus('☁️ 云端已连接（所有设备数据实时同步）');
- Cloud.load(TECH_KEY, [], function (techs) {
+ setjbStatus('☁️ 云端已连接（所有设备数据实时同步）');
+ jb.load(TECH_KEY, [], function (techs) {
  renderPending(techs || []);
  renderAll(techs || []);
  updateCounts(techs || [], null);
  });
- Cloud.load(LOG_KEY, [], function (logs) {
+ jb.load(LOG_KEY, [], function (logs) {
  renderHistory(logs || []);
  updateCounts(null, logs || []);
  });
- Cloud.load(NOTICE_KEY, [], function (notes) { renderNotices(notes || []); });
+ jb.load(NOTICE_KEY, [], function (notes) { renderNotices(notes || []); });
  });
 }
 
@@ -258,7 +259,7 @@ function renderAll(list) {
 }
 
 function doAudit(id, action) {
- Cloud.load(TECH_KEY, [], function (list) {
+jb.load(TECH_KEY, [], function (list) {
  var tech = null;
  for (var i = 0; i < list.length; i++) {
  if (list[i].id === id) { tech = list[i]; break; }
@@ -270,7 +271,7 @@ function doAudit(id, action) {
 
  lsSave(TECH_KEY, list, function () {});
 
- Cloud.load(LOG_KEY, [], function (logs) {
+jb.load(LOG_KEY, [], function (logs) {
  logs = logs || [];
  logs.unshift({
  id: tech.id,
@@ -324,7 +325,7 @@ function addNotice() {
  var title = document.getElementById('noticeTitle').value.trim();
  var content = document.getElementById('noticeContent').value.trim();
  if (!title || !content) { toast('请填写标题和内容'); return; }
- Cloud.load(NOTICE_KEY, [], function (list) {
+jb.load(NOTICE_KEY, [], function (list) {
  list = list || [];
  list.unshift({ id: genId(), title: title, content: content, time: Date.now() });
  lsSave(NOTICE_KEY, list, function () {
@@ -352,7 +353,7 @@ function renderNotices(list) {
 
 function delNotice(id) {
  if (!confirm('确定删除该公告？')) return;
- Cloud.load(NOTICE_KEY, [], function (list) {
+jb.load(NOTICE_KEY, [], function (list) {
  list = (list || []).filter(function (n) { return n.id !== id; });
  lsSave(NOTICE_KEY, list, function () { toast('已删除'); renderNotices(list); });
  });
